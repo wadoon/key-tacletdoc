@@ -12,3 +12,13 @@ This mono-repository provides several tools in the KeY ecosystem:
 3. <miniweb/> --  A simple web-interface for using KeY.
 4. <interactionlog> -- A plugin for KeY to record and re-apply user interaction. 
 
+# tadoc -- Generation of Taclet Documentation 
+
+
+
+## TODO/Bugs
+
+* pretty printing not working quite right
+  * replacewith could be more formatted
+  * `<sort>::<id>` -- id is not printed
+* documentation formatting, especially trim the indentation
