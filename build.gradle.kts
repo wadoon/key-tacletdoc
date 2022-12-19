@@ -41,6 +41,7 @@ dependencies {
     implementation("com.atlassian.commonmark:commonmark-ext-heading-anchor:0.17.0")
 
     plugin(platform("org.jetbrains.kotlin:kotlin-bom"))
+    plugin("com.google.googlejavaformat:google-java-format:1.15.0");
     plugin("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     plugin("com.github.ajalt:clikt:2.8.0")
     plugin("org.jetbrains:annotations:23.0.0")
