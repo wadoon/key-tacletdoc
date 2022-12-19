@@ -16,7 +16,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-package org.key_project.core.doc
+package org.key_project.tadoc
 
 import de.uka.ilkd.key.nparser.KeYParser
 import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
@@ -30,7 +30,7 @@ import org.commonmark.ext.gfm.tables.TablesExtension
 import org.commonmark.ext.ins.InsExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
-import org.key_project.core.doc.Markdown.markdown
+import org.key_project.tadoc.Markdown.markdown
 import org.key_project.core.doc.org.key_project.core.doc.GenDocStep
 import java.io.File
 import java.util.*

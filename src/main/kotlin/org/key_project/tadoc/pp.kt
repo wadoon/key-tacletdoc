@@ -16,7 +16,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-package org.key_project.core.doc
+package org.key_project.tadoc
 
 import de.uka.ilkd.key.nparser.KeYLexer
 import de.uka.ilkd.key.nparser.KeYParser
@@ -26,8 +26,9 @@ import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.key_project.core.doc.Symbol.Type.SORT
+import org.key_project.tadoc.Symbol.Type.SORT
 import org.key_project.core.doc.org.key_project.core.doc.App
+import org.key_project.tadoc.pp.*
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.util.*
@@ -51,34 +52,6 @@ class PrettyPrinterDoc(
     private val vocabulary = KeYLexer(CharStreams.fromString("")).vocabulary
     private val tokenSymbols = index.filterIsInstance<TokenSymbol>()
 
-    override fun aggregateResult(aggregate: Document?, nextResult: Document?) =
-        (aggregate ?: empty) `^^` (nextResult ?: empty)
-
-    override fun visitTerminal(node: TerminalNode) = visitToken(node.symbol)
-
-    private fun visitToken(t: Token): Document {
-        if (t.type == KeYLexer.DOC_COMMENT) return empty
-        if (t.type == KeYLexer.LPAREN || t.type == KeYLexer.LBRACE || t.type == KeYLexer.LBRACKET)
-            return openParenthesis(t)
-        if (t.type == KeYLexer.RPAREN || t.type == KeYLexer.RBRACE || t.type == KeYLexer.RBRACKET)
-            return closeParenthesis(t)
-        if (t.type == KeYLexer.IDENT && t.text[0] == '#') {
-            return printSpan(t.text, "schema-variable")
-        }
-        val s = tokenSymbols.find { it.tokenType == t.type }
-        val text = if (s != null && printReferences)
-            "<a class=\"token\" href=\"${s.href}\">${t.text}</a> "
-        else
-            "${t.text}"
-        return printSpan(text, vocabulary.getDisplayName(t.type))
-    }
-
-    private fun printSpan(text: String, classes: String) =
-        if (printColor)
-            fancystring("<span class=\"token $classes\">$text</span>", text.length)
-        else
-            string(text)
-
     private val rainbowColors = arrayOf(
         "#458588",
         "#b16286",
@@ -100,6 +73,35 @@ class PrettyPrinterDoc(
 
     private val parenthesisIds = LinkedList<Int>()
     private var parenthesisCounter = 0
+
+    override fun aggregateResult(aggregate: Document?, nextResult: Document?) =
+        (aggregate ?: empty) `^^` (nextResult ?: empty)
+
+    override fun visitTerminal(node: TerminalNode) = visitToken(node.symbol)
+
+    private fun visitToken(t: Token): Document {
+        if (t.type == KeYLexer.DOC_COMMENT) return empty
+        if (t.type == KeYLexer.LPAREN || t.type == KeYLexer.LBRACE || t.type == KeYLexer.LBRACKET)
+            return openParenthesis(t)
+        if (t.type == KeYLexer.RPAREN || t.type == KeYLexer.RBRACE || t.type == KeYLexer.RBRACKET)
+            return closeParenthesis(t)
+        if (t.type == KeYLexer.IDENT && t.text[0] == '#') {
+            return printSpan(t.text, "schema-variable")
+        }
+        val s = tokenSymbols.find { it.tokenType == t.type }
+        val text = if (s != null && printReferences)
+            "<a class=\"token\" href=\"${s.href}\">${t.text}</a> "
+        else
+            t.text
+        return printSpan(text, vocabulary.getDisplayName(t.type))
+    }
+
+    private fun printSpan(text: String, classes: String) =
+        if (printColor)
+            fancystring("<span class=\"token $classes\">$text</span>", text.length)
+        else
+            string(text)
+
     private fun openParenthesis(token: Token): Document {
         if (printColor) {
             val p = ++parenthesisCounter
@@ -207,6 +209,13 @@ class PrettyPrinterDoc(
             string(text) + space
         }
     }
+
+    override fun visitFile(ctx: KeYParser.FileContext): Document =
+        ctx.decls().accept(this) `^^`
+                break0 `^^` (ctx.problem()?.accept(this) ?: blank(0))
+
+    override fun visitDecls(ctx: KeYParser.DeclsContext): Document =
+        ctx.children.map { it.accept(this) }.reduce { a, b -> a `^^` break0 `^^` b }
 
     override fun visitSimple_ident_dots(ctx: KeYParser.Simple_ident_dotsContext?): Document {
         return super.visitSimple_ident_dots(ctx)

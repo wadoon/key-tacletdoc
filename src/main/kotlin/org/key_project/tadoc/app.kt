@@ -29,7 +29,8 @@ import de.uka.ilkd.key.nparser.KeYParser
 import de.uka.ilkd.key.nparser.ParsingFacade
 import org.antlr.v4.runtime.CharStreams
 import org.key_project.core.doc.*
-import org.key_project.doc.scripts.ScriptDoc
+import org.key_project.tadoc.*
+import org.key_project.tadoc.scripts.ScriptDoc
 import java.io.File
 
 object App {

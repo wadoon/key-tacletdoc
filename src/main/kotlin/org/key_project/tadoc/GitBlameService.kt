@@ -18,7 +18,7 @@
  */
 package org.key_project.core.doc.org.key_project.core.doc
 
-import org.key_project.core.doc.execute
+import org.key_project.tadoc.execute
 import java.io.File
 
 object GitBlameService {

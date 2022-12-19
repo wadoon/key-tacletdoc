@@ -20,6 +20,11 @@ package org.key_project.core.doc
 import de.uka.ilkd.key.nparser.ParsingFacade
 import org.junit.jupiter.api.Test
 import org.key_project.core.doc.*
+import org.key_project.tadoc.*
+import org.key_project.tadoc.pp.`^^`
+import org.key_project.tadoc.pp.break1
+import org.key_project.tadoc.pp.nest
+import org.key_project.tadoc.pp.string
 import java.io.File
 
 /**
@@ -38,7 +43,7 @@ class PPrintTest {
                     `^^` break1 `^^` string("stmt;")
                     `^^` break1 `^^` string("stmt;")
             ) `^^` break1 `^^` string("end")
-        println(pretty(d, 40))
+        println(org.key_project.tadoc.pp.pretty(d, 40))
     }
 
     @Test
