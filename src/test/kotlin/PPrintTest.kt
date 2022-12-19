@@ -17,6 +17,8 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 package org.key_project.core.doc
+
+import com.google.common.truth.Truth
 import de.uka.ilkd.key.nparser.ParsingFacade
 import org.junit.jupiter.api.Test
 import org.key_project.core.doc.*
@@ -40,10 +42,21 @@ class PPrintTest {
             string("begin") `^^` nest(
                 4,
                 break1 `^^` string("stmt;")
-                    `^^` break1 `^^` string("stmt;")
-                    `^^` break1 `^^` string("stmt;")
+                        `^^` break1 `^^` string("stmt;")
+                        `^^` break1 `^^` string("stmt;")
             ) `^^` break1 `^^` string("end")
         println(org.key_project.tadoc.pp.pretty(d, 40))
+    }
+
+    @Test
+    fun test_braces() {
+        val doc = org.key_project.tadoc.pp.braces(
+            string("abc")
+        )
+        print(doc)
+        val actual = org.key_project.tadoc.pp.pretty(doc, 40)
+        val expected = "{abc}";
+        Truth.assertThat(actual).isEqualTo(expected)
     }
 
     @Test
@@ -56,6 +69,8 @@ class PPrintTest {
             Symbol("Test", "xxx", type = Symbol.Type.FILE),
             hashMapOf()
         )
-        println("TXT: $txt")
+        println("TXT: -----------------")
+        println(txt)
+        println("------------------")
     }
 }

@@ -51,6 +51,9 @@ when( doc1) {
 fun internal_break(i: Int) = ifflat(blank(i), hardline)
 val break0 = internal_break(0)
 val break1 = internal_break(1)
+val breakable_space = break1
+val softbreak = break0
+
 fun break_(i: Int) = when (i) {
     0 -> break0
     1 -> break1
@@ -129,7 +132,7 @@ fun repeat(n: Int, doc: Document) =
 fun precede(l: Document, x: Document) = cat(l, x)
 fun precede(l: String, x: Document) = cat(string(l), x)
 fun terminate(r: Document, x: Document) = cat(x, r)
-fun enclose(l: Document, r: Document, x: Document) = cat(cat(l, x), r)
+fun enclose(l: Document, x: Document, r: Document) = cat(cat(l, x), r)
 fun squotes(x: Document) = enclose(squote, x, squote)
 fun dquotes(x: Document) = enclose(dquote, x, dquote)
 fun bquotes(x: Document) = enclose(bquote, x, bquote)

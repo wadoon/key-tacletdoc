@@ -42,6 +42,10 @@ fun pretty(ctx: ParserRuleContext, index: Index, currentContext: Symbol, usageIn
     return sw.toString()
 }
 
+fun Iterable<Document>.concat(): Document = reduce { acc, document -> acc + document }
+fun Iterable<Document>.join(delim: Document): Document = reduce { acc, document -> acc + delim + document }
+
+
 class PrettyPrinterDoc(
     val index: Index,
     val currentContext: Symbol,
@@ -117,15 +121,15 @@ class PrettyPrinterDoc(
     }
 
     private fun closeParenthesis(token: Token): Document {
-        if (printColor) {
+        return if (printColor) {
             val pop = parenthesisIds.pop()
             val c = rainbowColors[pop % rainbowColors.size]
-            return fancystring(
+            fancystring(
                 "<span style=\"color:$c\" class=\"paired-element\" id=\"close-$pop\" mouseover=\"highlight($pop)\">${token.text}</span>",
                 token.text.length
             )
         } else {
-            return string(token.text)
+            string(token.text)
         }
     }
 
@@ -205,17 +209,18 @@ class PrettyPrinterDoc(
             usageIndex.add(s, currentContext)
             fancystring("<a href=\"${s.href}\" class=\"symbol ${s.type.name}\">$text</a> ", text.length)
         } else {
-            App.errordpln("Could not found symbol for $text : ${types.toList()}")
+            App.errordpln("Could not find symbol for $text : ${types.toList()}")
             string(text) + space
         }
     }
 
     override fun visitFile(ctx: KeYParser.FileContext): Document =
         ctx.decls().accept(this) `^^`
-                break0 `^^` (ctx.problem()?.accept(this) ?: blank(0))
+                hardline `^^` (ctx.problem()?.accept(this) ?: blank(0))
 
     override fun visitDecls(ctx: KeYParser.DeclsContext): Document =
-        ctx.children.map { it.accept(this) }.reduce { a, b -> a `^^` break0 `^^` b }
+        ctx.children.map { it.accept(this) }.reduce { a, b -> a `^^` hardline `^^` b }
+
 
     override fun visitSimple_ident_dots(ctx: KeYParser.Simple_ident_dotsContext?): Document {
         return super.visitSimple_ident_dots(ctx)
@@ -257,13 +262,16 @@ class PrettyPrinterDoc(
         return super.visitSimple_ident_comma_list(ctx)
     }
 
-    override fun visitSchema_var_decls(ctx: KeYParser.Schema_var_declsContext?): Document {
-        return super.visitSchema_var_decls(ctx)
-    }
+    override fun visitSchema_var_decls(ctx: KeYParser.Schema_var_declsContext): Document =
+        docOf(ctx.SCHEMAVARIABLES()) + bblock(
+            ctx.one_schema_var_decl().map { docOf(it) }.join(break0)
+        )
 
-    override fun visitOne_schema_var_decl(ctx: KeYParser.One_schema_var_declContext?): Document {
-        return super.visitOne_schema_var_decl(ctx)
-    }
+    override fun visitOne_schema_var_decl(ctx: KeYParser.One_schema_var_declContext): Document =
+        joinChildren(ctx)
+
+    private fun joinChildren(ctx: ParserRuleContext): Document =
+        ctx.children.map { it.accept(this) }.join(space)
 
     override fun visitSchema_modifiers(ctx: KeYParser.Schema_modifiersContext?): Document {
         return super.visitSchema_modifiers(ctx)
@@ -277,19 +285,26 @@ class PrettyPrinterDoc(
         return super.visitPred_decl(ctx)
     }
 
-    override fun visitPred_decls(ctx: KeYParser.Pred_declsContext?): Document {
-        return super.visitPred_decls(ctx)
-    }
+    fun bblock(doc: Document) = braces(indent(hardline + doc) + hardline)
+
+    override fun visitPred_decls(ctx: KeYParser.Pred_declsContext): Document =
+        docOf(ctx.PREDICATES()) + bblock(
+            indent(
+                ctx.pred_decl().map { docOf(it) }.join(hardline)
+            )
+        )
 
     override fun visitFunc_decl(ctx: KeYParser.Func_declContext?): Document {
         return super.visitFunc_decl(ctx)
     }
 
-    override fun visitFunc_decls(ctx: KeYParser.Func_declsContext?): Document {
-        return super.visitFunc_decls(ctx)
-    }
+    fun indent(doc: Document) = nest(INDENT, doc)
+    override fun visitFunc_decls(ctx: KeYParser.Func_declsContext): Document =
+        docOf(ctx.FUNCTIONS()) + bblock(
+            ctx.func_decl().map { docOf(it) }.join(hardline)
+        )
 
-    override fun visitArg_sorts_or_formula(ctx: KeYParser.Arg_sorts_or_formulaContext?): Document {
+    override fun visitArg_sorts_or_formula(ctx: KeYParser.Arg_sorts_or_formulaContext): Document {
         return super.visitArg_sorts_or_formula(ctx)
     }
 
@@ -317,9 +332,10 @@ class PrettyPrinterDoc(
         return super.visitWhere_to_bind(ctx)
     }
 
-    override fun visitRuleset_decls(ctx: KeYParser.Ruleset_declsContext?): Document {
-        return super.visitRuleset_decls(ctx)
-    }
+    override fun visitRuleset_decls(ctx: KeYParser.Ruleset_declsContext): Document =
+        docOf(ctx.HEURISTICSDECL()) + bblock(
+            ctx.simple_ident().map { docOf(it) }.join(string(",") + space)
+        )
 
     override fun visitSortId(ctx: KeYParser.SortIdContext): Document {
         return ref(ctx.text, SORT)
@@ -395,50 +411,45 @@ class PrettyPrinterDoc(
         if (ctx == null) empty
         else leading + accept(ctx) + trailing
 
-    override fun visitTaclet(ctx: KeYParser.TacletContext): Document {
-        var d: Document = docOf(ctx.LEMMA(), trailing = space) +
-                accept(ctx.name) +
-                docOf(ctx.choices_) +
-                space + lbrace + hardline +
-                docOf(ctx.form)
-
-        if (ctx.SCHEMAVAR().isNotEmpty()) {
-            d = d + concat(
-                (0 until ctx.SCHEMAVAR().size).map { i ->
-                    docOf(ctx.SCHEMAVAR(i)) + space + docOf(ctx.one_schema_var_decl(i)) + semi + hardline
-                }
-            )
-        }
-
-        ctx.ifSeq?.let {
-            d = docOf(ctx.ASSUMES()) +
-                    lparen + accept(it) + rparen + hardline
-        }
-
-        ctx.find?.let {
-            d = docOf(ctx.FIND()) + lparen + accept(ctx.find) + rparen + hardline
-        }
-
-        if (ctx.SAMEUPDATELEVEL().isNotEmpty())
-            d = d + docOf(ctx.SAMEUPDATELEVEL().first(), trailing = hardline)
-        if (ctx.INSEQUENTSTATE().isNotEmpty())
-            d = d + docOf(ctx.INSEQUENTSTATE().first(), trailing = hardline)
-        if (ctx.ANTECEDENTPOLARITY().isNotEmpty())
-            d = d + docOf(ctx.ANTECEDENTPOLARITY().first(), trailing = hardline)
-        if (ctx.INSEQUENTSTATE().isNotEmpty())
-            d = d + docOf(ctx.INSEQUENTSTATE().first(), trailing = hardline)
-
-        if (ctx.VARCOND().isNotEmpty()) {
-            // ( VARCOND LPAREN varexplist RPAREN )*
-            d = d + group(
-                concat_map(ctx.varexplist()) {
-                    docOf(ctx.VARCOND().first()) + lparen + docOf(it) + rparen + break1
-                }
-            )
-        }
-        d = d + docOf(ctx.goalspecs()) + docOf(ctx.modifiers()) + hardline + rbrace + semi
-        return d
-    }
+    override fun visitTaclet(ctx: KeYParser.TacletContext): Document =
+        docOf(ctx.LEMMA(), trailing = space) + docOf(ctx.name) + docOf(ctx.choices_) + space + bblock(
+            docOf(ctx.form) + (
+                    if (ctx.SCHEMAVAR().isNotEmpty()) {
+                        concat(
+                            (0 until ctx.SCHEMAVAR().size).map { i ->
+                                docOf(ctx.SCHEMAVAR(i)) + space + docOf(ctx.one_schema_var_decl(i)) + semi + hardline
+                            }
+                        )
+                    } else empty
+                    )
+                    + (ctx.ifSeq?.let { docOf(ctx.ASSUMES()) + parens(accept(it)) + hardline } ?: empty)
+                    + (ctx.find?.let { docOf(ctx.FIND()) + parens(space + accept(ctx.find) + space) + hardline }
+                ?: empty)
+                    + (if (ctx.SAMEUPDATELEVEL().isNotEmpty()) docOf(
+                ctx.SAMEUPDATELEVEL().first(),
+                trailing = hardline
+            ) else empty)
+                    + (if (ctx.INSEQUENTSTATE().isNotEmpty()) docOf(
+                ctx.INSEQUENTSTATE().first(),
+                trailing = hardline
+            ) else empty)
+                    + (if (ctx.ANTECEDENTPOLARITY().isNotEmpty()) docOf(
+                ctx.ANTECEDENTPOLARITY().first(),
+                trailing = hardline
+            ) else empty)
+                    + (if (ctx.INSEQUENTSTATE().isNotEmpty()) docOf(
+                ctx.INSEQUENTSTATE().first(),
+                trailing = hardline
+            ) else empty)
+                    + (if (ctx.VARCOND().isNotEmpty()) {
+                group(
+                    concat_map(ctx.varexplist()) {
+                        docOf(ctx.VARCOND().first()) + lparen + docOf(it) + rparen + break1
+                    }
+                )
+            } else empty)
+                    + docOf(ctx.goalspecs()) + docOf(ctx.modifiers()) + hardline
+        ) + semi
 
     override fun visitModifiers(ctx: KeYParser.ModifiersContext): Document {
         var d: Document = empty
@@ -447,7 +458,7 @@ class PrettyPrinterDoc(
         }
 
         ctx.NONINTERACTIVE().firstOrNull().let {
-            d = d + docOf(it, hardline)
+            d += docOf(it, hardline)
         }
 
         ctx.dname?.let {
@@ -547,6 +558,12 @@ class PrettyPrinterDoc(
         )
 
     override fun visitRuleset(ctx: KeYParser.RulesetContext) = ref(ctx.text, Symbol.Type.RULESET)
+
+    override fun visitRulesOrAxioms(ctx: KeYParser.RulesOrAxiomsContext) =
+        docOf(ctx.AXIOMS() ?: ctx.RULES()) + docOf(ctx.option_list(), lparen, rparen) + bblock(
+            ctx.taclet().map { docOf(it) }.join(hardline + hardline)
+        )
+
 }
 
 private operator fun Document.plus(doc: Document) = cat(this, doc)
@@ -704,7 +721,7 @@ class PrettyPrinterStr(
             "<a href=\"${s.href}\" class=\"symbol ${s.type.name}\">$text</a> "
         } else
             "$text ".also {
-                App.errordpln("Could not found symbol for $text : ${types.toList()}")
+                App.errordpln("Could not find symbol for $text : ${types.toList()}")
             }
     }
 
@@ -832,6 +849,7 @@ class PrettyPrinterStr(
             )
         )
     }
+
 
     override fun visitTermEOF(ctx: KeYParser.TermEOFContext?): String {
         return super.visitTermEOF(ctx)
@@ -991,6 +1009,10 @@ class PrettyPrinterStr(
 
     override fun visitVarexp(ctx: KeYParser.VarexpContext?): String {
         return super.visitVarexp(ctx)
+    }
+
+    override fun visitModality_term(ctx: KeYParser.Modality_termContext?): String {
+        return super.visitModality_term(ctx)
     }
 
     override fun visitGoalspecs(ctx: KeYParser.GoalspecsContext) =

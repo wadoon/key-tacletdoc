@@ -52,13 +52,15 @@ abstract class DefaultPage(
             it.appendHTML(true).html {
                 head {
                     title(pageTitle)
+                    styleLink("pure.min.css")
+                    styleLink("grid-responsive-min.css")
                     styleLink("style.css")
                 }
                 body {
                     div("pure-g") {
                         id = "layout"
                         commonHeader(this)
-                        div("content pure-u-3-4") {
+                        div("content pure-u-1 pure-u-md-3-4") {
                             content(this)
                             commonFooter(this)
                         }
@@ -71,8 +73,8 @@ abstract class DefaultPage(
     abstract fun content(div: DIV)
 
     open fun commonHeader(body: DIV) =
-        body.div("sidebar pure-u-1-4") {
-            div("0header") {
+        body.div("sidebar pure-u-1 pure-u-md-1-4") {
+            div("header") {
                 h1("brand-title") { +brandTitle }
                 h2("brand-tagline") { +tagLine }
 

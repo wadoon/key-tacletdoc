@@ -24,29 +24,17 @@ import org.key_project.tadoc.pp.Document.Group
 import org.key_project.tadoc.pp.Document.HardLine
 import org.key_project.tadoc.pp.Document.IfFlat
 import java.io.PrintWriter
-import java.io.StringWriter
 import java.lang.Integer.max
 import java.lang.Integer.min
 import java.util.*
 import kotlin.Boolean
-import kotlin.Char
 import kotlin.Double
 import kotlin.IllegalArgumentException
 import kotlin.Int
 import kotlin.Pair
-import kotlin.String
 import kotlin.Suppress
 import kotlin.Unit
-import kotlin.also
-import kotlin.let
-import kotlin.require
 import kotlin.text.String
-import kotlin.text.indexOf
-import kotlin.text.repeat
-import kotlin.text.split
-import kotlin.text.substring
-import kotlin.text.toCharArray
-import kotlin.to
 
 /** A point is a pair of a line number and a column number. */
 typealias Point = Pair<Int, Int>
@@ -161,7 +149,7 @@ sealed class Document {
         val s: kotlin.String,
         val ofs: Int,
         val len: Int,
-        val apperentLength: Int
+        val apparentLength: Int
     ) : Document() {
         constructor(s: kotlin.String, apparentLength: Int) : this(s, 0, s.length, apparentLength)
     }
@@ -183,39 +171,36 @@ sealed class Document {
     /** The following constructors store their space Requirement. This is the
     document's apparent length, if printed in flattening mode. This
     information is computed in a bottom-up manner when the document is
-    constructed. */
+    constructed.
 
-    /** In other words, the space Requirement is the number of columns that the
+    In other words, the space Requirement is the number of columns that the
     document needs in order to fit on a single line. We express this value in
     the set of `integers extended with infinity', and use the value
     [infinity] to indicate that the document cannot be printed on a single
-    line. */
+    line.
 
-    /** Storing this information at [Group] nodes is crucial, as it allows us to
-    avoid backtracking and buffering. */
+    Storing this information at [Group] nodes is crucial, as it allows us to
+    avoid backtracking and buffering.
 
-    /** Storing this information at other nodes allows the function [Requirement]
+    Storing this information at other nodes allows the function [Requirement]
     to operate in constant time. This means that the bottom-up computation of
     requirements takes linear time. */
 
     /** [Cat (req, doc1, doc2)] is the concatenation of the documents [doc1] and
     [doc2]. The space Requirement [req] is the sum of the requirements of
     [doc1] and [doc2]. */
-
     data class Cat(val req: Requirement, val doc1: Document, val doc2: Document) : Document()
 
     /** [Nest (req, j, doc)] is the document [doc], in which the indentation
     level has been increased by [j], that is, in which [j] blanks have been
     inserted after every newline character. The space Requirement [req] is
     the same as the Requirement of [doc]. */
-
     data class Nest(val req: Requirement, val j: Int, val doc: Document) : Document()
 
     /** [Group (req, doc)] represents an alternative: it is either a flattened
     form of [doc], in which occurrences of [Group] disappear and occurrences
     of [IfFlat] resolve to their left branch, or [doc] itself. The space
     Requirement [req] is the same as the Requirement of [doc]. */
-
     data class Group(val req: Requirement, val doc: Document) : Document()
 
     /** [Align (req, doc)] increases the indentation level to reach the current
@@ -233,13 +218,13 @@ sealed class Document {
     data class Custom(val doc: CustomDocument) : Document()
 }
 
-/* Retrieving or computing the space Requirement of a document. */
+/** Retrieving or computing the space Requirement of a document. */
 tailrec fun Requirement(x: Document): Requirement =
     when (x) {
         is Document.Empty -> Requirement(0)
         is Document.Char -> Requirement(1)
         is Document.String -> Requirement(x.s.length)
-        is Document.FancyString -> Requirement(x.apperentLength)
+        is Document.FancyString -> Requirement(x.apparentLength)
         is Document.Blank -> Requirement(x.len)
         /* In flattening mode, the Requirement of [ifflat x y] is just the
         Requirement of its flat version, [x]. */
@@ -258,7 +243,5 @@ tailrec fun Requirement(x: Document): Requirement =
         is Document.Group -> x.req
         is Document.Align -> x.req
         is Document.Range -> x.req
-        // | Custom c -> c#Requirement
-        else -> throw IllegalArgumentException()
+        is Document.Custom -> x.doc.requirement
     }
-

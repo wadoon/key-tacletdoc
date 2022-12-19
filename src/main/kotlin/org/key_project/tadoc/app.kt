@@ -27,6 +27,7 @@ import com.github.ajalt.clikt.parameters.types.file
 import de.uka.ilkd.key.nparser.KeYLexer
 import de.uka.ilkd.key.nparser.KeYParser
 import de.uka.ilkd.key.nparser.ParsingFacade
+import de.uka.ilkd.key.util.parsing.SyntaxErrorReporter.ParserException
 import org.antlr.v4.runtime.CharStreams
 import org.key_project.core.doc.*
 import org.key_project.tadoc.*
@@ -73,6 +74,7 @@ class GenDoc : CliktCommand() {
             when {
                 file.isDirectory ->
                     file.walkTopDown().filter { it.name.endsWith(".key") }.toList()
+
                 else -> listOf(file)
             }
         }
@@ -94,13 +96,16 @@ class GenDoc : CliktCommand() {
     override fun run() {
         outputFolder.mkdirs()
         copyStaticFiles()
-        tacletFiles.map(::index).zip(tacletFiles).forEach { (ctx, f) -> run(ctx, f) }
+        tacletFiles.map(::index).zip(tacletFiles)
+            .forEach { (ctx, f) -> ctx?.let { run(it, f) } }
         ScriptDoc(symbols)
         generateIndex()
     }
 
     private fun copyStaticFiles() {
         copyStaticFile("style.css")
+        copyStaticFile("pure.min.css")
+        copyStaticFile("grid-responsive-min.css")
     }
 
     private fun copyStaticFile(s: String) {
@@ -111,14 +116,19 @@ class GenDoc : CliktCommand() {
         }
     }
 
-    private fun index(f: File): KeYParser.FileContext {
+    private fun index(f: File): KeYParser.FileContext? {
         App.putln("Parsing $f")
-        val ast = ParsingFacade.parseFile(f)
-        val ctx = ParsingFacade.getParseRuleContext(ast)
-        val self = f.nameWithoutExtension + ".html"
-        App.putln("Indexing $f")
-        ctx.accept(Indexer(self, symbols))
-        return ctx
+        try {
+            val ast = ParsingFacade.parseFile(f)
+            val ctx = ParsingFacade.getParseRuleContext(ast)
+            val self = f.nameWithoutExtension + ".html"
+            App.putln("Indexing $f")
+            ctx.accept(Indexer(self, symbols))
+            return ctx
+        } catch (e: ParserException) {
+            App.putln("Could not parse $f\n${e.message}")
+            return null
+        }
     }
 
     fun run(ctx: KeYParser.FileContext, f: File) {

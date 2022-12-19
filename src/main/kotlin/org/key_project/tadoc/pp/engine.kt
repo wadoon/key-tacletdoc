@@ -47,7 +47,7 @@ tailrec fun proceed(output: PrintWriter, state: State, x: Continuation) {
     }
 }
 
-tailrec fun prettyQ(
+fun prettyQ(
     output: PrintWriter,
     state: State,
     indent: Int,
@@ -79,7 +79,7 @@ tailrec fun prettyQ(
 
             is Document.FancyString -> {
                 output.print(doc.s.substring(doc.ofs, doc.len))
-                state.column = state.column + doc.apperentLength
+                state.column = state.column + doc.apparentLength
                 /* assert (ok state flatten); */
                 proceed(cont)
             }
@@ -202,7 +202,7 @@ tailrec fun pretty(
 
         is Document.FancyString -> {
             output.print(doc.s.substring(doc.ofs, doc.len))
-            state.column = state.column + doc.apperentLength
+            state.column = state.column + doc.apparentLength
             /* assert (ok state flatten); */
             proceed(output, state, cont)
         }
