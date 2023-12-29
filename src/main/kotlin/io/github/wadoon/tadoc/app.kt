@@ -16,23 +16,28 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-package org.key_project.core.doc.org.key_project.core.doc
+package io.github.wadoon.tadoc
 
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.file
 import de.uka.ilkd.key.nparser.KeYLexer
 import de.uka.ilkd.key.nparser.KeYParser
 import de.uka.ilkd.key.nparser.ParsingFacade
+import io.github.wadoon.tadoc.scripts.ScriptDoc
 import org.antlr.v4.runtime.CharStreams
-import org.key_project.core.doc.*
-import org.key_project.doc.scripts.ScriptDoc
 import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Path
+import java.nio.file.Paths
+import kotlin.io.path.*
 
-object App {
+
+object Tadoc {
     private const val logFormat = "[%5d] %s%s%s"
     private val startTime = System.currentTimeMillis()
 
@@ -65,17 +70,21 @@ class GenDoc : CliktCommand() {
         .file().default(File("target"))
 
     val inputFiles by argument("taclet-file", help = "")
-        .file().multiple(required = true)
+        .file().multiple(required = false)
 
-    val tacletFiles by lazy {
-        inputFiles.flatMap { file ->
-            when {
-                file.isDirectory ->
-                    file.walkTopDown().filter { it.name.endsWith(".key") }.toList()
-                else -> listOf(file)
-            }
+    val tacletFiles: List<Path> by lazy {
+        if (useDefaultClasspath) {
+            val packagePath = "de/uka/ilkd/key/proof/rules"
+            System.getProperty("java.class.path", ".")
+                .split(File.pathSeparator.toRegex())
+                .filter { it.isNotBlank() }
+                .flatMap { collectAll(Paths.get(it), packagePath) }
+        } else {
+            collectAll(inputFiles)
         }
     }
+
+    val useDefaultClasspath by option("--use-default-classpath").flag()
 
     private val usageIndex: UsageIndex = HashMap()
 
@@ -110,19 +119,19 @@ class GenDoc : CliktCommand() {
         }
     }
 
-    private fun index(f: File): KeYParser.FileContext {
-        App.putln("Parsing $f")
+    private fun index(f: Path): KeYParser.FileContext {
+        Tadoc.putln("Parsing $f")
         val ast = ParsingFacade.parseFile(f)
         val ctx = ParsingFacade.getParseRuleContext(ast)
-        val self = f.nameWithoutExtension + ".html"
-        App.putln("Indexing $f")
+        val self = "${f.nameWithoutExtension}.html"
+        Tadoc.putln("Indexing $f")
         ctx.accept(Indexer(self, symbols))
         return ctx
     }
 
-    fun run(ctx: KeYParser.FileContext, f: File) {
+    fun run(ctx: KeYParser.FileContext, f: Path) {
         try {
-            App.putln("Analyze: $f")
+            Tadoc.putln("Analyze: $f")
             val target = File(outputFolder, f.nameWithoutExtension + ".html")
             DocumentationFile(target, f, ctx, symbols, usageIndex).manifest()
         } catch (e: Exception) {
@@ -137,4 +146,28 @@ class GenDoc : CliktCommand() {
         val uif = File(outputFolder, "usage.html")
         UsageIndexFile(uif, symbols, usageIndex).manifest()
     }
+}
+
+private fun collectAll(inputFiles: Iterable<File>): List<Path> = inputFiles.flatMap { file ->
+    when {
+        file.isDirectory() ->
+            file.walkTopDown().filter { it.name.endsWith(".key") }
+                .map { it.toPath() }
+                .toList()
+
+        else -> listOf(file.toPath())
+    }
+}
+
+private fun collectAll(path: Path, packagePath: String): Iterable<Path> {
+    if (path.extension == "jar") {
+        val fs = FileSystems.newFileSystem(path)
+        val folder = fs.getPath(packagePath)
+        if (folder.exists() && folder.isDirectory()) {
+            return folder.listDirectoryEntries("*.key")
+        } else {
+            fs.close()
+        }
+    }
+    return listOf()
 }

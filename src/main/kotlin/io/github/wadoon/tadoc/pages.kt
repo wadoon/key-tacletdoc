@@ -16,7 +16,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-package org.key_project.core.doc
+package io.github.wadoon.tadoc
 
 import de.uka.ilkd.key.nparser.KeYParser
 import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
@@ -30,10 +30,12 @@ import org.commonmark.ext.gfm.tables.TablesExtension
 import org.commonmark.ext.ins.InsExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
-import org.key_project.core.doc.Markdown.markdown
-import org.key_project.core.doc.org.key_project.core.doc.GenDocStep
+import io.github.wadoon.tadoc.Markdown.markdown
 import java.io.File
+import java.nio.file.Path
 import java.util.*
+import kotlin.io.path.name
+import kotlin.io.path.nameWithoutExtension
 
 abstract class DefaultPage(
     val target: File,
@@ -220,7 +222,7 @@ class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : D
 
 class DocumentationFile(
     target: File,
-    val keyFile: File,
+    val keyFile: Path,
     val ctx: KeYParser.FileContext,
     index: Index,
     val usageIndex: UsageIndex

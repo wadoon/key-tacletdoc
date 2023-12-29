@@ -18,11 +18,11 @@
  */
 @file:Suppress("unused", "KDocUnresolvedReference")
 
-package org.key_project.core.doc
+package io.github.wadoon.tadoc
 
-import org.key_project.core.doc.Document.Group
-import org.key_project.core.doc.Document.HardLine
-import org.key_project.core.doc.Document.IfFlat
+import io.github.wadoon.tadoc.Document.Group
+import io.github.wadoon.tadoc.Document.HardLine
+import io.github.wadoon.tadoc.Document.IfFlat
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.Integer.max

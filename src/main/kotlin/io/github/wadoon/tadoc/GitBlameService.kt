@@ -16,9 +16,8 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-package org.key_project.core.doc.org.key_project.core.doc
+package io.github.wadoon.tadoc
 
-import org.key_project.core.doc.execute
 import java.io.File
 
 object GitBlameService {

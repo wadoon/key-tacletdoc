@@ -18,8 +18,8 @@
  */
 package org.key_project.core.doc
 import de.uka.ilkd.key.nparser.ParsingFacade
+import io.github.wadoon.tadoc.*
 import org.junit.jupiter.api.Test
-import org.key_project.core.doc.*
 import java.io.File
 
 /**

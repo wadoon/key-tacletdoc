@@ -16,7 +16,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-package org.key_project.core.doc
+package io.github.wadoon.tadoc
 
 import de.uka.ilkd.key.nparser.KeYLexer
 import de.uka.ilkd.key.nparser.KeYParser
@@ -26,8 +26,7 @@ import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
 import org.antlr.v4.runtime.tree.ParseTree
 import org.antlr.v4.runtime.tree.TerminalNode
-import org.key_project.core.doc.Symbol.Type.SORT
-import org.key_project.core.doc.org.key_project.core.doc.App
+import io.github.wadoon.tadoc.Symbol.Type.SORT
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.util.*
@@ -203,7 +202,7 @@ class PrettyPrinterDoc(
             usageIndex.add(s, currentContext)
             fancystring("<a href=\"${s.href}\" class=\"symbol ${s.type.name}\">$text</a> ", text.length)
         } else {
-            App.errordpln("Could not found symbol for $text : ${types.toList()}")
+            Tadoc.errordpln("Could not found symbol for $text : ${types.toList()}")
             string(text) + space
         }
     }
@@ -707,7 +706,7 @@ class PrettyPrinterStr(
             "<a href=\"${s.href}\" class=\"symbol ${s.type.name}\">$text</a> "
         } else
             "$text ".also {
-                App.errordpln("Could not found symbol for $text : ${types.toList()}")
+                Tadoc.errordpln("Could not found symbol for $text : ${types.toList()}")
             }
     }
 

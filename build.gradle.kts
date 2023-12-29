@@ -9,13 +9,16 @@ plugins {
     id("com.github.ben-manes.versions") version "0.50.0"
 }
 
+version = "1.0"
+description = "Tool for the generation of taclet documentation"
+
 repositories {
     mavenCentral()
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") }
 }
 
 application {
-    mainClass = "org.key-project.core.doc.AppKt"
+    mainClass = "io.github.wadoon.tadoc.Tadoc"
 }
 
 dependencies {
@@ -48,12 +51,12 @@ dependencies {
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
 }
 
 tasks.withType<JavaCompile> {
-    options.release.set(11)
+    options.release.set(17)
 }
 
 tasks.withType<Test> {
@@ -73,4 +76,11 @@ java {
 
 tasks.withType<Javadoc>() {
     isFailOnError = false
+}
+
+tasks.create<JavaExec>("generate") {
+    dependsOn("compileKotlin")
+    mainClass = application.mainClass
+    classpath= sourceSets["main"].runtimeClasspath
+    args("--output", "out", "--use-default-classpath")
 }

@@ -16,7 +16,7 @@
  *
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
-package org.key_project.core.doc
+package io.github.wadoon.tadoc
 
 import de.uka.ilkd.key.nparser.KeYParser
 import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
@@ -96,8 +96,10 @@ open class Symbol(
     val type: Type,
     val ctx: Any? = null
 ) {
-    open val anchor = "$type-$target"
-    open val href = "$url#$anchor"
+    open val anchor
+        get() = "$type-$target"
+    open val href
+        get() = "$url#$anchor"
 
     enum class Type(val navigationTitle: String) {
         CATEGORY("Choice categories"),
