@@ -420,6 +420,8 @@ class FileVisitor(
                     })
                 }
             }
+            +(ctx.doc?.text?:"")
+            ctx.taclet().forEach { visitTaclet(it)            }
         }
     }
 
