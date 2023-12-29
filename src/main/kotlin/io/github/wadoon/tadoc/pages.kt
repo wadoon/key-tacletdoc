@@ -20,6 +20,7 @@ package io.github.wadoon.tadoc
 
 import de.uka.ilkd.key.nparser.KeYParser
 import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
+import io.github.wadoon.tadoc.Markdown.markdown
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
 import org.antlr.v4.runtime.ParserRuleContext
@@ -30,7 +31,6 @@ import org.commonmark.ext.gfm.tables.TablesExtension
 import org.commonmark.ext.ins.InsExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
-import io.github.wadoon.tadoc.Markdown.markdown
 import java.io.File
 import java.nio.file.Path
 import java.util.*
@@ -54,13 +54,15 @@ abstract class DefaultPage(
             it.appendHTML(true).html {
                 head {
                     title(pageTitle)
+                    styleLink("pure.min.css")
+                    styleLink("grid-responsive-min.css")
                     styleLink("style.css")
                 }
                 body {
                     div("pure-g") {
                         id = "layout"
                         commonHeader(this)
-                        div("content pure-u-3-4") {
+                        div("content pure-u-1 pure-u-md-3-4") {
                             content(this)
                             commonFooter(this)
                         }
@@ -73,8 +75,8 @@ abstract class DefaultPage(
     abstract fun content(div: DIV)
 
     open fun commonHeader(body: DIV) =
-        body.div("sidebar pure-u-1-4") {
-            div("0header") {
+        body.div("sidebar pure-u-1 pure-u-md-1-4") {
+            div("header") {
                 h1("brand-title") { +brandTitle }
                 h2("brand-tagline") { +tagLine }
 
@@ -399,8 +401,10 @@ class FileVisitor(
                         }
 
                         override fun visitOption_expr_prop(ctx: KeYParser.Option_expr_propContext): Void? {
-                            val target = index.findChoice(ctx.option().cat.text,
-                                ctx.option().value.text)?.href ?: ""
+                            val target = index.findChoice(
+                                ctx.option().cat.text,
+                                ctx.option().value.text
+                            )?.href ?: ""
                             a(target, classes = "symbol choice") { +it.text }
                             return null
                         }
@@ -420,8 +424,8 @@ class FileVisitor(
                     })
                 }
             }
-            +(ctx.doc?.text?:"")
-            ctx.taclet().forEach { visitTaclet(it)            }
+            +(ctx.doc?.text ?: "")
+            ctx.taclet().forEach { visitTaclet(it) }
         }
     }
 

@@ -28,6 +28,7 @@ import com.github.ajalt.clikt.parameters.types.file
 import de.uka.ilkd.key.nparser.KeYLexer
 import de.uka.ilkd.key.nparser.KeYParser
 import de.uka.ilkd.key.nparser.ParsingFacade
+import de.uka.ilkd.key.util.parsing.SyntaxErrorReporter.ParserException
 import io.github.wadoon.tadoc.scripts.ScriptDoc
 import org.antlr.v4.runtime.CharStreams
 import java.io.File
@@ -102,13 +103,16 @@ class GenDoc : CliktCommand() {
     override fun run() {
         outputFolder.mkdirs()
         copyStaticFiles()
-        tacletFiles.map(::index).zip(tacletFiles).forEach { (ctx, f) -> run(ctx, f) }
+        tacletFiles.map(::index).zip(tacletFiles)
+            .forEach { (ctx, f) -> ctx?.let { run(it, f) } }
         ScriptDoc(symbols)
         generateIndex()
     }
 
     private fun copyStaticFiles() {
         copyStaticFile("style.css")
+        copyStaticFile("pure.min.css")
+        copyStaticFile("grid-responsive-min.css")
     }
 
     private fun copyStaticFile(s: String) {
@@ -119,14 +123,20 @@ class GenDoc : CliktCommand() {
         }
     }
 
-    private fun index(f: Path): KeYParser.FileContext {
+
+    private fun index(f: Path): KeYParser.FileContext? {
         Tadoc.putln("Parsing $f")
-        val ast = ParsingFacade.parseFile(f)
-        val ctx = ParsingFacade.getParseRuleContext(ast)
-        val self = "${f.nameWithoutExtension}.html"
-        Tadoc.putln("Indexing $f")
-        ctx.accept(Indexer(self, symbols))
-        return ctx
+        try {
+            val ast = ParsingFacade.parseFile(f)
+            val ctx = ParsingFacade.getParseRuleContext(ast)
+            val self = f.nameWithoutExtension + ".html"
+            Tadoc.putln("Indexing $f")
+            ctx.accept(Indexer(self, symbols))
+            return ctx
+        } catch (e: ParserException) {
+            Tadoc.putln("Could not parse $f\n${e.message}")
+            return null
+        }
     }
 
     fun run(ctx: KeYParser.FileContext, f: Path) {

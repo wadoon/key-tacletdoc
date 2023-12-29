@@ -17,7 +17,6 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 package io.github.wadoon.tadoc.scripts
-
 import de.uka.ilkd.key.api.KeYApi
 import de.uka.ilkd.key.macros.ProofMacro
 import de.uka.ilkd.key.macros.scripts.ProofScriptCommand
