@@ -33,7 +33,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.2")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.2")
     testImplementation("com.google.truth:truth:1.4.0")
-    testImplementation("org.slf4j:slf4j-simple:2.0.11")
+    testImplementation("org.slf4j:slf4j-simple:2.0.12")
 
     implementation("org.key-project:key.core:2.12.2")
     implementation("org.key-project:key.util:2.12.2")
