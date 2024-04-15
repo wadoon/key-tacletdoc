@@ -26,7 +26,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("com.github.ajalt:clikt:2.8.0")
     implementation("org.jetbrains:annotations:24.1.0")
-    implementation("org.slf4j:slf4j-api:2.0.12")
+    implementation("org.slf4j:slf4j-api:2.0.13")
 
     val testImplementation by configurations
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.2")
