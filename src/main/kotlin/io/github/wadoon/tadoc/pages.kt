@@ -138,7 +138,7 @@ class IndexPage(target: File, index: Index) : DefaultPage(target, "Index Page", 
     override fun content(div: DIV) {
         div.div {
             h1 { +"Index page" }
-            Symbol.Type.values().forEach {
+            Symbol.Type.entries.forEach {
                 region(it)
             }
         }
@@ -373,6 +373,35 @@ class FileVisitor(
             }
             markdown(ctx.DOC_COMMENT()?.symbol)
             printDefinition(ctx)
+        }
+    }
+
+    override fun visitDatatype_decls(ctx: KeYParser.Datatype_declsContext) {
+        tagConsumer.h2 { +"Datatypes" }
+        ctx.datatype_decl().forEach { visitDatatype_decl(it) }
+    }
+
+    override fun visitDatatype_decl(ctx: KeYParser.Datatype_declContext) {
+        val dtSymbol = index.lookup(ctx)
+        tagConsumer.div("doc datatype") {
+            h3 {
+                id = dtSymbol?.anchor ?: ""
+                +ctx.name.text
+            }
+            markdown(ctx.DOC_COMMENT()?.symbol)
+
+            div {
+                span { +"type ${ctx.name.text} = " }
+                ul {
+                    ctx.datatype_constructor().forEach {constr ->
+                        li {
+                            val args = constr.argSort.zip(constr.argName)
+                                .joinToString(", ") { (a, b) -> "${a.text} ${b.text}" }
+                            +"${constr.name}($args)"
+                        }
+                    }
+                }
+            }
         }
     }
 
