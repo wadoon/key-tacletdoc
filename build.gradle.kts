@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.0.20"
+    id("org.jetbrains.kotlin.jvm") version "2.0.21"
     id("org.jetbrains.dokka") version "1.9.20"
     `java-library`
     application
@@ -25,7 +25,7 @@ dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("com.github.ajalt:clikt:2.8.0")
-    implementation("org.jetbrains:annotations:25.0.0")
+    implementation("org.jetbrains:annotations:26.0.1")
     implementation("org.slf4j:slf4j-api:2.0.16")
 
     val testImplementation by configurations
