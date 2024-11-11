@@ -35,8 +35,8 @@ dependencies {
     testImplementation("com.google.truth:truth:1.4.4")
     testImplementation("org.slf4j:slf4j-simple:2.0.16")
 
-    implementation("org.key-project:key.core:2.12.2")
-    implementation("org.key-project:key.util:2.12.2")
+    implementation("org.key-project:key.core:2.12.3")
+    implementation("org.key-project:key.util:2.12.3")
 
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.11.0")
     implementation("com.atlassian.commonmark:commonmark:0.17.0")
