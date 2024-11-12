@@ -84,6 +84,15 @@ class Indexer(val self: String, val index: Index) : KeYParserBaseVisitor<Unit>()
     override fun visitOne_invariant(ctx: KeYParser.One_invariantContext) {
         index += Symbol.invariant(ctx.invName.text, self, ctx)
     }
+
+    override fun visitDatatype_decl(ctx: KeYParser.Datatype_declContext) {
+        index += Symbol.datatype(self, ctx.name.text, ctx)
+        index += Symbol.sort(self, ctx.name.text, ctx)
+    }
+
+    override fun visitDatatype_constructor(ctx: KeYParser.Datatype_constructorContext) {
+        index += Symbol.function(self, ctx.name.text, ctx)
+    }
 }
 
 /**
@@ -113,7 +122,8 @@ open class Symbol(
         CONTRACT("Contracts"),
         INVARIANT("Invariants"),
         FILE("Files"),
-        TOKEN("t"), EXTERNAL("ext");
+        TOKEN("t"), EXTERNAL("ext"),
+        DATATYPE("Datatypes");
     }
 
     companion object {
@@ -139,6 +149,7 @@ open class Symbol(
 
         fun contract(name: String, self: String, ctx: Any? = null) = Symbol(name, self, name, Type.CONTRACT, ctx)
         fun invariant(name: String, self: String, ctx: Any? = null) = Symbol(name, self, name, Type.INVARIANT, ctx)
+        fun datatype(name: String, self: String, ctx: KeYParser.Datatype_declContext) = Symbol(name, self, name, Type.DATATYPE,ctx)
     }
 
     override fun toString(): String {
