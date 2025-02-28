@@ -15,6 +15,7 @@ description = "Tool for the generation of taclet documentation"
 repositories {
     mavenCentral()
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") }
+    maven { url = uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")}
 }
 
 application {
