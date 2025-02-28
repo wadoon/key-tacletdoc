@@ -216,7 +216,7 @@ fun split(chars: (Char) -> Boolean, s: String): List<Document> {
 
 /** [words s] chops the string [s] into a list of words, which are turned
 into documents. */
-fun words(s: String) = s.split("\\s").map { it.strip() }.map { ::string }
+fun words(s: String) = s.split("\\s").map { it.trim() }.map { ::string }
 
 fun <T> flow_map(sep: Document, docs: List<T>, f: (T) -> Document) = flow_map(sep, f, docs)
 

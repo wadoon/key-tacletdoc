@@ -47,21 +47,14 @@ dependencies {
     implementation("com.atlassian.commonmark:commonmark-ext-heading-anchor:0.17.0")
 
 }
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "17"
-    }
+kotlin {
+    jvmToolchain(21)
 }
 
-tasks.withType<JavaCompile> {
-    options.release.set(17)
-}
 
 tasks.withType<Test> {
     useJUnitPlatform()
-    reports.html.required.set(false)
+    reports.html.required.set(true)
     reports.junitXml.required.set(true)
     testLogging {
         events("passed", "skipped", "failed")
@@ -78,9 +71,27 @@ tasks.withType<Javadoc>() {
     isFailOnError = false
 }
 
-tasks.create<JavaExec>("generate") {
+tasks.register<JavaExec>("generate") {
     dependsOn("compileKotlin")
     mainClass = application.mainClass
     classpath= sourceSets["main"].runtimeClasspath
     args("--output", "out", "--use-default-classpath")
+}
+
+
+dokka {
+    moduleName.set("Generator for KeY Logic Documentation")
+    dokkaSourceSets.main {
+        includes.from("README.md")
+        sourceLink {
+            localDirectory.set(file("src/main/kotlin"))
+            remoteUrl("https://www.javadoc.io/doc/org.key-project/key.core")
+            remoteLineSuffix.set("#L")
+        }
+    }
+    pluginsConfiguration.html {
+        //customStyleSheets.from("styles.css")
+        //customAssets.from("logo.png")
+        //footerMessage.set("(c) Your Company")
+    }
 }
