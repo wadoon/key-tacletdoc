@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.1.10"
     id("org.jetbrains.dokka") version "2.0.0"
@@ -24,14 +22,17 @@ application {
 dependencies {
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    implementation("com.github.ajalt:clikt:2.8.0")
+    implementation("com.github.ajalt.clikt:clikt:5.0.3")
     implementation("org.jetbrains:annotations:26.0.2")
     implementation("org.slf4j:slf4j-api:2.0.16")
 
-    val testImplementation by configurations
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.12.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.12.0")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.12.0")
+    //val testImplementation by configurations
+    testImplementation(platform("org.junit:junit-bom:5.12.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.google.truth:truth:1.4.4")
     testImplementation("org.slf4j:slf4j-simple:2.0.16")
 
@@ -47,15 +48,13 @@ dependencies {
     implementation("com.atlassian.commonmark:commonmark-ext-heading-anchor:0.17.0")
 
 }
+
 kotlin {
     jvmToolchain(21)
 }
 
-
 tasks.withType<Test> {
     useJUnitPlatform()
-    reports.html.required.set(true)
-    reports.junitXml.required.set(true)
     testLogging {
         events("passed", "skipped", "failed")
         showExceptions = true
@@ -67,7 +66,7 @@ java {
     withSourcesJar()
 }
 
-tasks.withType<Javadoc>() {
+tasks.withType<Javadoc> {
     isFailOnError = false
 }
 
