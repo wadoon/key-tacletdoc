@@ -1,6 +1,6 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.2.20"
-    id("org.jetbrains.dokka") version "2.0.0"
+    id("org.jetbrains.kotlin.jvm") version "2.2.21"
+    id("org.jetbrains.dokka") version "2.1.0"
     `java-library`
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
@@ -27,7 +27,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.17")
 
     //val testImplementation by configurations
-    testImplementation(platform("org.junit:junit-bom:6.0.0"))
+    testImplementation(platform("org.junit:junit-bom:6.0.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
