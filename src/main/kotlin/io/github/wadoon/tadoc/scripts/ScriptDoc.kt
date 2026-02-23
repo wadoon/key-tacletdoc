@@ -17,15 +17,17 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 package io.github.wadoon.tadoc.scripts
-import de.uka.ilkd.key.api.KeYApi
+
+import de.uka.ilkd.key.control.KeYEnvironment
 import de.uka.ilkd.key.macros.ProofMacro
-import de.uka.ilkd.key.macros.scripts.ProofScriptCommand
 import de.uka.ilkd.key.proof.io.ProblemLoaderException
 import de.uka.ilkd.key.rule.Taclet
-import kotlinx.html.*
+import de.uka.ilkd.key.scripts.ProofScriptCommand
 import io.github.wadoon.tadoc.DefaultPage
 import io.github.wadoon.tadoc.Index
+import kotlinx.html.*
 import java.io.File
+import java.nio.file.Paths
 import java.util.*
 import java.util.stream.Collectors
 
@@ -33,7 +35,9 @@ import java.util.stream.Collectors
  * @author Alexander Weigl
  * @version 1 (11.09.17)
  */
-class ScriptDoc(index: Index) : DefaultPage(File("script.html"), "Reference for Proof Scripts", index) {
+class ScriptDoc(
+    index: Index,
+) : DefaultPage(File("script.html"), "Reference for Proof Scripts", index) {
     override fun content(div: DIV) {
         writePreamble(div)
         writeCommand(div)
@@ -50,16 +54,19 @@ class ScriptDoc(index: Index) : DefaultPage(File("script.html"), "Reference for 
 
     private val basedir = File("..")
 
-    private val dummyFile = File(
-        ".", "key.ui/examples/standard_key/prop_log/contraposition.key"
-    )
+    private val dummyFile =
+        Paths.get(
+            ".",
+            "key.ui/examples/standard_key/prop_log/contraposition.key",
+        )
 
     @get:Throws(ProblemLoaderException::class)
     private val taclets: List<Taclet> by lazy {
-        println("Use dummy file: " + dummyFile.absolutePath)
-        val env = KeYApi.loadFromKeyFile(dummyFile).loadedProof.env
+        println("Use dummy file: " + dummyFile.toAbsolutePath())
+        val env = KeYEnvironment.load(dummyFile)
         val a = env.initConfig.taclets
-        a.stream()
+        a
+            .stream()
             .sorted(Comparator.comparing { obj: Taclet -> obj.name() })
             .collect(Collectors.toList())
     }
@@ -73,7 +80,7 @@ class ScriptDoc(index: Index) : DefaultPage(File("script.html"), "Reference for 
                         +"[rule] "
                         span { +t.displayName() }
                         +" "
-                        t.ifFindVariables.forEach {
+                        t.assumesAndFindVariables.forEach {
                             span { +"inst_$it" }
                         }
                     }
@@ -83,8 +90,9 @@ class ScriptDoc(index: Index) : DefaultPage(File("script.html"), "Reference for 
     }
 
     private fun writeMacros(stream: DIV) {
-        val macros = ArrayList(KeYApi.getMacroApi().macros)
-        macros.sortWith(Comparator.comparing { obj: ProofMacro -> obj.scriptCommandName })
+        val macros =
+            ServiceLoader.load<ProofMacro?>(ProofMacro::class.java).filterNotNull().toMutableSet()
+        macros.sortedWith(Comparator.comparing { obj: ProofMacro -> obj.scriptCommandName })
         stream.section {
             h2 { +"Macros" }
             for (t in macros) {
@@ -101,7 +109,7 @@ class ScriptDoc(index: Index) : DefaultPage(File("script.html"), "Reference for 
         }
     }
 
-    private fun P.helpForCommand(c: ProofScriptCommand<*>) {
+    private fun P.helpForCommand(c: ProofScriptCommand) {
         h3 { +c.name }
         div {
             +"> Synopsis: "
@@ -113,12 +121,17 @@ class ScriptDoc(index: Index) : DefaultPage(File("script.html"), "Reference for 
                         +"[${a.name}]"
                     } else {
                         val arg =
-                            if (a.name.startsWith("#")) // positional argument
+                            if (a.name.startsWith("#")) {
+                                // positional argument
                                 "<${a.type.simpleName.uppercase(Locale.getDefault())}>"
-                            else
+                            } else {
                                 "${a.name}=<${a.type.simpleName.uppercase(Locale.getDefault())}>"
-                        if (!a.isRequired) +"[$arg]"
-                        else +arg
+                            }
+                        if (!a.isRequired) {
+                            +"[$arg]"
+                        } else {
+                            +arg
+                        }
                     }
                 }
             }
@@ -144,13 +157,14 @@ class ScriptDoc(index: Index) : DefaultPage(File("script.html"), "Reference for 
     }
 
     private fun writeCommand(stream: DIV) {
-        val commands = ArrayList(KeYApi.getScriptCommandApi().scriptCommands)
-        commands.sortWith(Comparator.comparing { obj: ProofScriptCommand<*> -> obj.name })
+        val commands = ServiceLoader.load(ProofScriptCommand::class.java).toMutableList()
+        commands.sortedWith(Comparator.comparing { it.name })
         stream.div {
             h2 { +"Commands" }
             for (t in commands) {
-                if (t.name !in FORBBIDEN_COMMANDS)
+                if (t.name !in FORBBIDEN_COMMANDS) {
                     p { this.helpForCommand(t) }
+                }
             }
         }
     }

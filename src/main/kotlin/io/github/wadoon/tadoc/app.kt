@@ -38,7 +38,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.*
 
-
 object Tadoc {
     private const val logFormat = "[%5d] %s%s%s"
     private val startTime = System.currentTimeMillis()
@@ -48,36 +47,51 @@ object Tadoc {
         GenDoc().main(args)
     }
 
-    fun putln(s: String, colorOn: String = "", colorOff: String = "") =
-        println(String.format(logFormat, (System.currentTimeMillis() - startTime), colorOn, s, colorOff))
+    fun putln(
+        s: String,
+        colorOn: String = "",
+        colorOff: String = "",
+    ) = println(String.format(logFormat, (System.currentTimeMillis() - startTime), colorOn, s, colorOff))
 
     const val ESC = 27.toChar()
-    fun putln(s: String, color: Int) = putln(s, "$ESC[${color}m", "$ESC[0m")
+
+    fun putln(
+        s: String,
+        color: Int,
+    ) = putln(s, "$ESC[${color}m", "$ESC[0m")
+
     fun errorln(s: String) = putln(s, 33)
+
     private var printedErrors = mutableSetOf<String>()
+
     fun errordpln(s: String) {
         if (s !in printedErrors) {
-            printedErrors.add(s); errorln(s)
+            printedErrors.add(s)
+            errorln(s)
         }
     }
 }
 
 interface GenDocStep {
     fun prepare()
+
     fun manifest()
 }
 
 class GenDoc : CliktCommand() {
     val outputFolder by option("-o", "--output", help = "output folder", metavar = "FOLDER")
-        .file().default(File("target"))
+        .file()
+        .default(File("target"))
 
     val inputFiles by argument("taclet-file", help = "")
-        .file().multiple(required = false)
+        .file()
+        .multiple(required = false)
 
     val tacletFiles: List<Path> by lazy {
         if (useDefaultClasspath) {
             val packagePath = "de/uka/ilkd/key/proof/rules"
-            System.getProperty("java.class.path", ".")
+            System
+                .getProperty("java.class.path", ".")
                 .split(File.pathSeparator.toRegex())
                 .filter { it.isNotBlank() }
                 .flatMap { collectAll(Paths.get(it), packagePath) }
@@ -90,21 +104,24 @@ class GenDoc : CliktCommand() {
 
     private val usageIndex: UsageIndex = HashMap()
 
-    private val symbols = Index().also {
-        val l = KeYLexer(CharStreams.fromString(""))
-        (0..l.vocabulary.maxTokenType)
-            .filter { l.vocabulary.getLiteralName(it) != null }
-            .forEach { t ->
-                l.vocabulary.getSymbolicName(t)?.let { name ->
-                    it += Symbol.token(name, t)
+    private val symbols =
+        Index().also {
+            val l = KeYLexer(CharStreams.fromString(""))
+            (0..l.vocabulary.maxTokenType)
+                .filter { l.vocabulary.getLiteralName(it) != null }
+                .forEach { t ->
+                    l.vocabulary.getSymbolicName(t)?.let { name ->
+                        it += Symbol.token(name, t)
+                    }
                 }
-            }
-    }
+        }
 
     override fun run() {
         outputFolder.mkdirs()
         copyStaticFiles()
-        tacletFiles.map(::index).zip(tacletFiles)
+        tacletFiles
+            .map(::index)
+            .zip(tacletFiles)
             .forEach { (ctx, f) -> ctx?.let { run(it, f) } }
         ScriptDoc(symbols)
         generateIndex()
@@ -124,7 +141,6 @@ class GenDoc : CliktCommand() {
         }
     }
 
-
     private fun index(f: Path): KeYParser.FileContext? {
         Tadoc.putln("Parsing $f")
         try {
@@ -140,7 +156,10 @@ class GenDoc : CliktCommand() {
         }
     }
 
-    fun run(ctx: KeYParser.FileContext, f: Path) {
+    fun run(
+        ctx: KeYParser.FileContext,
+        f: Path,
+    ) {
         try {
             Tadoc.putln("Analyze: $f")
             val target = File(outputFolder, f.nameWithoutExtension + ".html")
@@ -159,18 +178,27 @@ class GenDoc : CliktCommand() {
     }
 }
 
-private fun collectAll(inputFiles: Iterable<File>): List<Path> = inputFiles.flatMap { file ->
-    when {
-        file.isDirectory() ->
-            file.walkTopDown().filter { it.name.endsWith(".key") }
-                .map { it.toPath() }
-                .toList()
+private fun collectAll(inputFiles: Iterable<File>): List<Path> =
+    inputFiles.flatMap { file ->
+        when {
+            file.isDirectory() -> {
+                file
+                    .walkTopDown()
+                    .filter { it.name.endsWith(".key") }
+                    .map { it.toPath() }
+                    .toList()
+            }
 
-        else -> listOf(file.toPath())
+            else -> {
+                listOf(file.toPath())
+            }
+        }
     }
-}
 
-private fun collectAll(path: Path, packagePath: String): Iterable<Path> {
+private fun collectAll(
+    path: Path,
+    packagePath: String,
+): Iterable<Path> {
     if (path.extension == "jar") {
         val fs = FileSystems.newFileSystem(path)
         val folder = fs.getPath(packagePath)

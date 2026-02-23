@@ -21,8 +21,9 @@ package io.github.wadoon.tadoc
 import de.uka.ilkd.key.nparser.KeYLexer
 import de.uka.ilkd.key.nparser.KeYParser
 import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
+import io.github.wadoon.pp.*
 import io.github.wadoon.tadoc.Symbol.Type.SORT
-import io.github.wadoon.tadoc.pp.*
+import kotlinx.html.Entities
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.Token
@@ -37,7 +38,7 @@ const val INDENT = 4
 fun pretty(ctx: ParserRuleContext, index: Index, currentContext: Symbol, usageIndex: UsageIndex): String {
     val d: Document = ctx.accept(PrettyPrinterDoc(index, currentContext, false, false, usageIndex))
     val sw = StringWriter()
-    prettyQ(PrintWriter(sw), State(80, 0.8), 0, false, d)
+    Engine.prettyQ(d, PrintWriter(sw), State(80, 0.8), 0, false)
     return sw.toString()
 }
 
@@ -56,7 +57,7 @@ class PrettyPrinterDoc(
     private val tokenSymbols = index.filterIsInstance<TokenSymbol>()
 
     override fun aggregateResult(aggregate: Document?, nextResult: Document?) =
-        (aggregate ?: empty) `^^` (nextResult ?: empty)
+        (aggregate ?: empty) + (nextResult ?: empty)
 
     override fun visitTerminal(node: TerminalNode) = visitToken(node.symbol)
 
@@ -181,22 +182,18 @@ class PrettyPrinterDoc(
             doc = doc + precede(ctx.ABSTRACT().text, break1)
         }
 
-        doc = doc + flow_map(comma + space, ctx.sortIds.simple_ident_dots()) { string(it.text) }
+        doc = doc + ctx.sortIds.simple_ident_dots().flowMap(comma + space) { string(Entities.it.text) }
 
         if (null != ctx.ONEOF()) {
             doc = doc + space + ctx.ONEOF().text + space +
-                    surround_separate_map(
-                        INDENT, 1, empty,
-                        lbrace, comma + space, rbrace, ctx.oneof_sorts().sortId()
-                    ) {
-                        ref(it.text, SORT)
-                    }
+                    ctx.oneof_sorts().sortId().surroundSeparateMap(
+                        opening = lbrace, closing = rbrace,
+                        indent = INDENT, space = 1
+                    ) { ref(it.text, SORT) }
         }
         if (null != ctx.EXTENDS()) {
             doc = doc + space + ctx.EXTENDS().text + space +
-                    separate_map(comma + space, ctx.sortExt.sortId()) {
-                        it.accept(this)
-                    }
+                    ctx.sortExt.sortId().separateMap(comma + space) { it.accept(this) }
         }
         return doc + semi
     }
@@ -214,11 +211,10 @@ class PrettyPrinterDoc(
     }
 
     override fun visitFile(ctx: KeYParser.FileContext): Document =
-        ctx.decls().accept(this) `^^`
-                hardline `^^` (ctx.problem()?.accept(this) ?: blank(0))
+        ctx.decls().accept(this) + hardline + (ctx.problem()?.accept(this) ?: blank(0))
 
     override fun visitDecls(ctx: KeYParser.DeclsContext): Document =
-        ctx.children.map { it.accept(this) }.reduce { a, b -> a `^^` hardline `^^` b }
+        ctx.children.map { it.accept(this) }.reduce { a, b -> a + hardline + b }
 
 
     override fun visitSimple_ident_dots(ctx: KeYParser.Simple_ident_dotsContext?): Document {
@@ -454,7 +450,7 @@ class PrettyPrinterDoc(
             ) else empty)
                     + (if (ctx.VARCOND().isNotEmpty()) {
                 group(
-                    concat_map(ctx.varexplist()) {
+                    ctx.varexplist().concatMap {
                         docOf(ctx.VARCOND().first()) + lparen + docOf(it) + rparen + break1
                     }
                 )
@@ -520,7 +516,7 @@ class PrettyPrinterDoc(
         if (ctx.CLOSEGOAL() != null) {
             accept(ctx.CLOSEGOAL())
         } else {
-            separate_map(semi + hardline, ctx.goalspecwithoption()) { accept(it) }
+            ctx.goalspecwithoption().separateMap(semi + hardline) { accept(it) }
         } + hardline
 
     override fun visitGoalspecwithoption(ctx: KeYParser.GoalspecwithoptionContext): Document =
@@ -565,7 +561,7 @@ class PrettyPrinterDoc(
 
     override fun visitRulesets(ctx: KeYParser.RulesetsContext) =
         docOf(ctx.HEURISTICS()) + parens(
-            separate_map(comma + space, ctx.ruleset()) { accept(it) }
+            ctx.ruleset().separateMap(comma + space) { accept(it) }
         )
 
     override fun visitRuleset(ctx: KeYParser.RulesetContext) = ref(ctx.text, Symbol.Type.RULESET)

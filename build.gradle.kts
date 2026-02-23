@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.dokka") version "2.1.0"
     `java-library`
     application
-    id("com.github.johnrengelman.shadow") version "8.1.1"
+    id("com.gradleup.shadow") version "9.3.1"
     id("com.github.ben-manes.versions") version "0.53.0"
 }
 
@@ -13,6 +13,7 @@ description = "Tool for the generation of taclet documentation"
 repositories {
     mavenCentral()
     maven { url = uri("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") }
+    maven("https://git.key-project.org/api/v4/projects/35/packages/maven")
 }
 
 application {
@@ -20,6 +21,16 @@ application {
 }
 
 dependencies {
+    //implementation("org.key-project:key.core:2.12.3")
+    //implementation("org.key-project:key.util:2.12.3")
+    val keyVersion = "2.13.0-SNAPSHOT"
+    implementation("org.key-project:key.core:$keyVersion")
+    implementation("org.key-project:key.util:$keyVersion")
+    implementation("org.key-project:key.core.wd:$keyVersion")
+    implementation("org.key-project:key.core.infflow:${keyVersion}")
+
+    implementation("io.github.wadoon:kotlin-prettyprinting:1.0")
+
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("com.github.ajalt.clikt:clikt:5.1.0")
@@ -35,9 +46,6 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.google.truth:truth:1.4.5")
     testImplementation("org.slf4j:slf4j-simple:2.0.17")
-
-    implementation("org.key-project:key.core:2.12.3")
-    implementation("org.key-project:key.util:2.12.3")
 
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.12.0")
     implementation("com.atlassian.commonmark:commonmark:0.17.0")
