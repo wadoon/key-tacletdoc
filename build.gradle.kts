@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.dokka") version "2.1.0"
     `java-library`
     application
-    id("com.gradleup.shadow") version "9.3.1"
+    id("com.gradleup.shadow") version "9.3.2"
     id("com.github.ben-manes.versions") version "0.53.0"
 }
 
