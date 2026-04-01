@@ -1,9 +1,9 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.3.10"
-    id("org.jetbrains.dokka") version "2.1.0"
+    id("org.jetbrains.kotlin.jvm") version "2.3.20"
+    id("org.jetbrains.dokka") version "2.2.0"
     `java-library`
     application
-    id("com.gradleup.shadow") version "9.3.2"
+    id("com.gradleup.shadow") version "9.4.1"
     id("com.github.ben-manes.versions") version "0.53.0"
 }
 
@@ -23,7 +23,7 @@ application {
 dependencies {
     //implementation("org.key-project:key.core:2.12.3")
     //implementation("org.key-project:key.util:2.12.3")
-    val keyVersion = "2.13.0-SNAPSHOT"
+    val keyVersion = "3.0.0-SNAPSHOT"
     implementation("org.key-project:key.core:$keyVersion")
     implementation("org.key-project:key.util:$keyVersion")
     implementation("org.key-project:key.core.wd:$keyVersion")
