@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.dokka") version "2.2.0"
     `java-library`
     application
-    id("com.gradleup.shadow") version "9.4.1"
+    id("com.gradleup.shadow") version "9.4.2"
     id("com.github.ben-manes.versions") version "0.54.0"
 }
 
@@ -35,17 +35,17 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("com.github.ajalt.clikt:clikt:5.1.0")
     implementation("org.jetbrains:annotations:26.1.0")
-    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("org.slf4j:slf4j-api:2.0.18")
 
     //val testImplementation by configurations
-    testImplementation(platform("org.junit:junit-bom:6.0.3"))
+    testImplementation(platform("org.junit:junit-bom:6.1.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.google.truth:truth:1.4.5")
-    testImplementation("org.slf4j:slf4j-simple:2.0.17")
+    testImplementation("org.slf4j:slf4j-simple:2.0.18")
 
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.12.0")
     implementation("com.atlassian.commonmark:commonmark:0.17.0")
