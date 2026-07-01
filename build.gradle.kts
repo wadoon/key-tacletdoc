@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.dokka") version "2.2.0"
     `java-library`
     application
-    id("com.gradleup.shadow") version "9.4.2"
+    id("com.gradleup.shadow") version "9.4.3"
     id("com.github.ben-manes.versions") version "0.54.0"
 }
 
@@ -38,7 +38,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.18")
 
     //val testImplementation by configurations
-    testImplementation(platform("org.junit:junit-bom:6.1.0"))
+    testImplementation(platform("org.junit:junit-bom:6.1.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
