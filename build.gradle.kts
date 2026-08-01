@@ -1,10 +1,10 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.4.0"
+    id("org.jetbrains.kotlin.jvm") version "2.4.10"
     id("org.jetbrains.dokka") version "2.2.0"
     `java-library`
     application
-    id("com.gradleup.shadow") version "9.4.3"
-    id("com.github.ben-manes.versions") version "0.54.0"
+    id("com.gradleup.shadow") version "9.6.1"
+    id("com.github.ben-manes.versions") version "0.56.0"
 }
 
 version = "1.0"
@@ -23,7 +23,7 @@ application {
 dependencies {
     //implementation("org.key-project:key.core:2.12.3")
     //implementation("org.key-project:key.util:2.12.3")
-    val keyVersion = "3.0.0-SNAPSHOT"
+    val keyVersion = "3.0.0"
     implementation("org.key-project:key.core:$keyVersion")
     implementation("org.key-project:key.util:$keyVersion")
     implementation("org.key-project:key.core.wd:$keyVersion")
@@ -38,7 +38,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.18")
 
     //val testImplementation by configurations
-    testImplementation(platform("org.junit:junit-bom:6.1.1"))
+    testImplementation(platform("org.junit:junit-bom:6.1.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
