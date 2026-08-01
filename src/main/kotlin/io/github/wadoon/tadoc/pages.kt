@@ -18,8 +18,7 @@
  */
 package io.github.wadoon.tadoc
 
-import de.uka.ilkd.key.nparser.KeYParser
-import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
+import de.uka.ilkd.key.nparser.*
 import io.github.wadoon.tadoc.Markdown.markdown
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
@@ -40,7 +39,7 @@ import kotlin.io.path.nameWithoutExtension
 abstract class DefaultPage(
     val target: File,
     val pageTitle: String,
-    val index: Index
+    val index: Index,
 ) : GenDocStep {
     var brandTitle: String = "KeY Logic Documentation"
     var tagLine: String = "Defined symbols in the KeY System"
@@ -102,10 +101,12 @@ abstract class DefaultPage(
         }
 
     open fun UL.navigation() {
-        val cat = index.asSequence()
-            .filter { it.url == self }
-            .filter { it.type != Symbol.Type.FILE && it.type != Symbol.Type.EXTERNAL }
-            .groupBy { it.type }
+        val cat =
+            index
+                .asSequence()
+                .filter { it.url == self }
+                .filter { it.type != Symbol.Type.FILE && it.type != Symbol.Type.EXTERNAL }
+                .groupBy { it.type }
         cat.forEach { c ->
             li {
                 +c.key.navigationTitle
@@ -125,7 +126,7 @@ abstract class DefaultPage(
                     li("pure-menu-item") {
                         a(
                             href = "https://key-project.org/docs/grammar/#how-to-doc",
-                            classes = "pure-menu-link"
+                            classes = "pure-menu-link",
                         ) { +"About" }
                     }
                 }
@@ -134,7 +135,10 @@ abstract class DefaultPage(
     }
 }
 
-class IndexPage(target: File, index: Index) : DefaultPage(target, "Index Page", index) {
+class IndexPage(
+    target: File,
+    index: Index,
+) : DefaultPage(target, "Index Page", index) {
     override fun content(div: DIV) {
         div.div {
             h1 { +"Index page" }
@@ -149,7 +153,10 @@ class IndexPage(target: File, index: Index) : DefaultPage(target, "Index Page", 
     fun DIV.region(title: Symbol.Type) {
         val types = index.filter { it.type == title }
         div("region") {
-            h2 { id = title.name; +title.navigationTitle }
+            h2 {
+                id = title.name
+                +title.navigationTitle
+            }
             if (types.isNotEmpty()) {
                 div("links") {
                     types.sortedBy { it.displayName }.forEach {
@@ -164,9 +171,14 @@ class IndexPage(target: File, index: Index) : DefaultPage(target, "Index Page", 
     }
 }
 
-class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : DefaultPage(target, "Usage", index) {
+class UsageIndexFile(
+    target: File,
+    index: Index,
+    val usageIndex: UsageIndex,
+) : DefaultPage(target, "Usage", index) {
     val usedItems =
-        usageIndex.entries.groupBy { (a, _) -> a.type }
+        usageIndex.entries
+            .groupBy { (a, _) -> a.type }
             .toList()
             .sortedBy { (a, _) -> a }
 
@@ -181,7 +193,7 @@ class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : D
 
     private fun DIV.region(
         category: Symbol.Type,
-        usedSymbols: List<MutableMap.MutableEntry<Symbol, MutableList<Symbol>>>
+        usedSymbols: List<MutableMap.MutableEntry<Symbol, MutableList<Symbol>>>,
     ) {
         h2("") {
             id = category.name
@@ -191,8 +203,14 @@ class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : D
             usedSymbols
                 .sortedBy { (a, _) -> a.displayName }
                 .forEach { (used, where) ->
-                    h3 { a(href = used.href) { id = used.anchor; +(used.displayName) } }
-                    where.sortedBy { it.displayName }
+                    h3 {
+                        a(href = used.href) {
+                            id = used.anchor
+                            +(used.displayName)
+                        }
+                    }
+                    where
+                        .sortedBy { it.displayName }
                         .distinctBy { it.href }
                         .forEach {
                             ul {
@@ -212,7 +230,8 @@ class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : D
             li {
                 a("#${type.name}") { +type.navigationTitle }
                 ul {
-                    seq.sortedBy { (a, _) -> a.displayName }
+                    seq
+                        .sortedBy { (a, _) -> a.displayName }
                         .forEach { (used, _) ->
                             li { a(href = "#${used.anchor}", classes = used.type.name) { +(used.displayName) } }
                         }
@@ -225,11 +244,10 @@ class UsageIndexFile(target: File, index: Index, val usageIndex: UsageIndex) : D
 class DocumentationFile(
     target: File,
     val keyFile: Path,
-    val ctx: KeYParser.FileContext,
+    val ctx: JavaKeYParser.FileContext,
     index: Index,
-    val usageIndex: UsageIndex
+    val usageIndex: UsageIndex,
 ) : DefaultPage(target, "${keyFile.nameWithoutExtension} -- Documentation", index) {
-
     override fun content(div: DIV) {
         div.h1 { +keyFile.name }
 
@@ -246,45 +264,44 @@ class FileVisitor(
     val self: String,
     val tagConsumer: DIV,
     val index: Index,
-    val usageIndex: UsageIndex
-) : KeYParserBaseVisitor<Unit>() {
-
+    val usageIndex: UsageIndex,
+) : JavaKeYParserBaseVisitor<Unit>() {
     private lateinit var symbol: Symbol
     private val printer: PrettyPrinterStr
         get() = PrettyPrinterStr(index, symbol, true, usageIndex)
 
-    override fun visitFile(ctx: KeYParser.FileContext) {
+    override fun visitFile(ctx: JavaKeYParser.FileContext) {
         symbol = index.lookup(ctx)!!
         tagConsumer.div { id = symbol.anchor }
         super.visitFile(ctx)
     }
 
-    override fun visitProblem(ctx: KeYParser.ProblemContext?) {
+    override fun visitProblem(ctx: JavaKeYParser.ProblemContext?) {
         super.visitProblem(ctx)
     }
 
-    override fun visitOne_include_statement(ctx: KeYParser.One_include_statementContext) {
+    override fun visitOne_include_statement(ctx: JavaKeYParser.One_include_statementContext) {
         tagConsumer.div { +"Requires: ${ctx.text}" }
         super.visitOne_include_statement(ctx)
     }
 
-    override fun visitOne_include(ctx: KeYParser.One_includeContext) {
+    override fun visitOne_include(ctx: JavaKeYParser.One_includeContext) {
         tagConsumer.div("include") { +"requires ${ctx.text}" }
     }
 
-    override fun visitOptions_choice(ctx: KeYParser.Options_choiceContext?) {
+    override fun visitOptions_choice(ctx: JavaKeYParser.Options_choiceContext?) {
         super.visitOptions_choice(ctx)
     }
 
-    override fun visitActivated_choice(ctx: KeYParser.Activated_choiceContext?) {
+    override fun visitActivated_choice(ctx: JavaKeYParser.Activated_choiceContext?) {
         super.visitActivated_choice(ctx)
     }
 
-    override fun visitOption_decls(ctx: KeYParser.Option_declsContext?) {
+    override fun visitOption_decls(ctx: JavaKeYParser.Option_declsContext?) {
         super.visitOption_decls(ctx)
     }
 
-    override fun visitChoice(ctx: KeYParser.ChoiceContext) {
+    override fun visitChoice(ctx: JavaKeYParser.ChoiceContext) {
         val catsym = index.lookup(ctx)
         tagConsumer.div("doc category") {
             h3 {
@@ -309,13 +326,16 @@ class FileVisitor(
         }
     }
 
-    override fun visitSort_decls(ctx: KeYParser.Sort_declsContext?) {
-        tagConsumer.h2 { id = "sorts"; +"Sorts" }
+    override fun visitSort_decls(ctx: JavaKeYParser.Sort_declsContext?) {
+        tagConsumer.h2 {
+            id = "sorts"
+            +"Sorts"
+        }
         super.visitSort_decls(ctx)
     }
 
-    override fun visitOne_sort_decl(ctx: KeYParser.One_sort_declContext) {
-        for (s in ctx.sortIds.simple_ident_dots()) {
+    override fun visitOne_sort_decl(ctx: JavaKeYParser.One_sort_declContext) {
+        for (s in ctx.sortIds.simple_ident_dots_with_docs()) {
             symbol = index.lookup(s)!!
             tagConsumer.div("doc sort") {
                 h3("sort") {
@@ -327,7 +347,7 @@ class FileVisitor(
         }
     }
 
-    override fun visitTransform_decl(ctx: KeYParser.Transform_declContext) {
+    override fun visitTransform_decl(ctx: JavaKeYParser.Transform_declContext) {
         symbol = index.lookup(ctx)!!
         tagConsumer.div("doc transformer") {
             h3("transformer") {
@@ -338,17 +358,17 @@ class FileVisitor(
         }
     }
 
-    override fun visitTransform_decls(ctx: KeYParser.Transform_declsContext?) {
+    override fun visitTransform_decls(ctx: JavaKeYParser.Transform_declsContext?) {
         tagConsumer.h2 { +"Transfomers" }
         super.visitTransform_decls(ctx)
     }
 
-    override fun visitPred_decls(ctx: KeYParser.Pred_declsContext?) {
+    override fun visitPred_decls(ctx: JavaKeYParser.Pred_declsContext?) {
         tagConsumer.h2 { +"Predicates" }
         super.visitPred_decls(ctx)
     }
 
-    override fun visitPred_decl(ctx: KeYParser.Pred_declContext) {
+    override fun visitPred_decl(ctx: JavaKeYParser.Pred_declContext) {
         symbol = index.lookup(ctx)!!
         tagConsumer.div("doc predicate") {
             h3("sort") {
@@ -359,12 +379,12 @@ class FileVisitor(
         }
     }
 
-    override fun visitFunc_decls(ctx: KeYParser.Func_declsContext?) {
+    override fun visitFunc_decls(ctx: JavaKeYParser.Func_declsContext?) {
         tagConsumer.h2 { +"Functions" }
         super.visitFunc_decls(ctx)
     }
 
-    override fun visitFunc_decl(ctx: KeYParser.Func_declContext) {
+    override fun visitFunc_decl(ctx: JavaKeYParser.Func_declContext) {
         val symbol = index.lookup(ctx)
         tagConsumer.div("doc function") {
             h3 {
@@ -376,12 +396,12 @@ class FileVisitor(
         }
     }
 
-    override fun visitDatatype_decls(ctx: KeYParser.Datatype_declsContext) {
+    override fun visitDatatype_decls(ctx: JavaKeYParser.Datatype_declsContext) {
         tagConsumer.h2 { +"Datatypes" }
         ctx.datatype_decl().forEach { visitDatatype_decl(it) }
     }
 
-    override fun visitDatatype_decl(ctx: KeYParser.Datatype_declContext) {
+    override fun visitDatatype_decl(ctx: JavaKeYParser.Datatype_declContext) {
         val dtSymbol = index.lookup(ctx)
         tagConsumer.div("doc datatype") {
             h3 {
@@ -393,10 +413,12 @@ class FileVisitor(
             div {
                 span { +"type ${ctx.name.text} = " }
                 ul {
-                    ctx.datatype_constructor().forEach {constr ->
+                    ctx.datatype_constructor().forEach { constr ->
                         li {
-                            val args = constr.argSort.zip(constr.argName)
-                                .joinToString(", ") { (a, b) -> "${a.text} ${b.text}" }
+                            val args =
+                                constr.argSort
+                                    .zip(constr.argName)
+                                    .joinToString(", ") { (a, b) -> "${a.text} ${b.text}" }
                             +"${constr.name}($args)"
                         }
                     }
@@ -405,7 +427,7 @@ class FileVisitor(
         }
     }
 
-    override fun visitRulesOrAxioms(ctx: KeYParser.RulesOrAxiomsContext) {
+    override fun visitRulesOrAxioms(ctx: JavaKeYParser.RulesOrAxiomsContext) {
         tagConsumer.h2 { +"Taclets" }
 
         tagConsumer.div {
@@ -414,43 +436,47 @@ class FileVisitor(
             } else {
                 +"Enabled under choices: "
                 ctx.choices?.option_expr()?.forEach {
-                    it.accept(object : KeYParserBaseVisitor<Void?>() {
-                        override fun visitOption_expr_or(ctx: KeYParser.Option_expr_orContext): Void? {
-                            ctx.option_expr(0).accept(this)
-                            +" | "
-                            ctx.option_expr(1).accept(this)
-                            return null
-                        }
+                    it.accept(
+                        object : JavaKeYParserBaseVisitor<Void?>() {
+                            override fun visitOption_expr_or(ctx: JavaKeYParser.Option_expr_orContext): Void? {
+                                ctx.option_expr(0).accept(this)
+                                +" | "
+                                ctx.option_expr(1).accept(this)
+                                return null
+                            }
 
-                        override fun visitOption_expr_paren(ctx: KeYParser.Option_expr_parenContext): Void? {
-                            +"("
-                            ctx.option_expr().accept(this)
-                            +")"
-                            return null
-                        }
+                            override fun visitOption_expr_paren(ctx: JavaKeYParser.Option_expr_parenContext): Void? {
+                                +"("
+                                ctx.option_expr().accept(this)
+                                +")"
+                                return null
+                            }
 
-                        override fun visitOption_expr_prop(ctx: KeYParser.Option_expr_propContext): Void? {
-                            val target = index.findChoice(
-                                ctx.option().cat.text,
-                                ctx.option().value.text
-                            )?.href ?: ""
-                            a(target, classes = "symbol choice") { +it.text }
-                            return null
-                        }
+                            override fun visitOption_expr_prop(ctx: JavaKeYParser.Option_expr_propContext): Void? {
+                                val target =
+                                    index
+                                        .findChoice(
+                                            ctx.option().cat.text,
+                                            ctx.option().value.text,
+                                        )?.href ?: ""
+                                a(target, classes = "symbol choice") { +it.text }
+                                return null
+                            }
 
-                        override fun visitOption_expr_not(ctx: KeYParser.Option_expr_notContext): Void? {
-                            +"!"
-                            ctx.option_expr().accept(this)
-                            return null
-                        }
+                            override fun visitOption_expr_not(ctx: JavaKeYParser.Option_expr_notContext): Void? {
+                                +"!"
+                                ctx.option_expr().accept(this)
+                                return null
+                            }
 
-                        override fun visitOption_expr_and(ctx: KeYParser.Option_expr_andContext): Void? {
-                            ctx.option_expr(0).accept(this)
-                            +" | "
-                            ctx.option_expr(1).accept(this)
-                            return null
-                        }
-                    })
+                            override fun visitOption_expr_and(ctx: JavaKeYParser.Option_expr_andContext): Void? {
+                                ctx.option_expr(0).accept(this)
+                                +" | "
+                                ctx.option_expr(1).accept(this)
+                                return null
+                            }
+                        },
+                    )
                 }
             }
             +(ctx.doc?.text ?: "")
@@ -458,7 +484,7 @@ class FileVisitor(
         }
     }
 
-    override fun visitTaclet(ctx: KeYParser.TacletContext) {
+    override fun visitTaclet(ctx: JavaKeYParser.TacletContext) {
         symbol = index.lookup(ctx)!!
         tagConsumer.div("doc taclet") {
             h3("taclet") {
@@ -508,7 +534,10 @@ class FileVisitor(
     }
 }
 
-private fun Index.findChoice(text: String?, text1: String?): Symbol? {
+private fun Index.findChoice(
+    text: String?,
+    text1: String?,
+): Symbol? {
     val t = "$text:$text1"
     return asSequence().find {
         it.type == Symbol.Type.OPTION && it.displayName == t
@@ -516,38 +545,45 @@ private fun Index.findChoice(text: String?, text1: String?): Symbol? {
 }
 
 object Markdown {
-    private val extensions = arrayListOf(
-        TablesExtension.create(),
-        AutolinkExtension.create(),
-        InsExtension.create(),
-        StrikethroughExtension.create()
-    )
+    private val extensions =
+        arrayListOf(
+            TablesExtension.create(),
+            AutolinkExtension.create(),
+            InsExtension.create(),
+            StrikethroughExtension.create(),
+        )
 
-    private val parser = Parser.builder()
-        .extensions(extensions)
-        .build()
+    private val parser =
+        Parser
+            .builder()
+            .extensions(extensions)
+            .build()
 
-    private val renderer = HtmlRenderer.builder()
-        .extensions(extensions)
-        .build()
+    private val renderer =
+        HtmlRenderer
+            .builder()
+            .extensions(extensions)
+            .build()
 
     fun DIV.markdown(doc: Token?) {
         if (doc == null) return
         div("markdown") {
             val regex = "^\\s{0,${doc.charPositionInLine}}".toRegex()
-            val text = doc.text
-                .trim('/', '!', '*')
-                .replace(regex, "")
-                .replaceAll(replacements)
+            val text =
+                doc.text
+                    .trim('/', '!', '*')
+                    .replace(regex, "")
+                    .replaceAll(replacements)
             unsafe { +renderer.render(parser.parse(text)) }
         }
     }
 
-    val replacements = listOf(
-        "@choiceDefaultOption" to "This is the default option.",
-        "@choiceUnsound" to """**This option is unsound**""",
-        "@choiceIncomplete" to """**This option is incomplete**"""
-    )
+    val replacements =
+        listOf(
+            "@choiceDefaultOption" to "This is the default option.",
+            "@choiceUnsound" to """**This option is unsound**""",
+            "@choiceIncomplete" to """**This option is incomplete**""",
+        )
 }
 
 private fun String.replaceAll(replacements: List<Pair<String, String>>): String =

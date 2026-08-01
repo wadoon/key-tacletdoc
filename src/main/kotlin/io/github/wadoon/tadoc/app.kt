@@ -26,8 +26,8 @@ import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.file
-import de.uka.ilkd.key.nparser.KeYLexer
-import de.uka.ilkd.key.nparser.KeYParser
+import de.uka.ilkd.key.nparser.JavaKeYLexer
+import de.uka.ilkd.key.nparser.JavaKeYParser
 import de.uka.ilkd.key.nparser.ParsingFacade
 import de.uka.ilkd.key.util.parsing.SyntaxErrorReporter.ParserException
 import io.github.wadoon.tadoc.scripts.ScriptDoc
@@ -106,7 +106,7 @@ class GenDoc : CliktCommand() {
 
     private val symbols =
         Index().also {
-            val l = KeYLexer(CharStreams.fromString(""))
+            val l = JavaKeYLexer(CharStreams.fromString(""))
             (0..l.vocabulary.maxTokenType)
                 .filter { l.vocabulary.getLiteralName(it) != null }
                 .forEach { t ->
@@ -141,7 +141,7 @@ class GenDoc : CliktCommand() {
         }
     }
 
-    private fun index(f: Path): KeYParser.FileContext? {
+    private fun index(f: Path): JavaKeYParser.FileContext? {
         Tadoc.putln("Parsing $f")
         try {
             val ast = ParsingFacade.parseFile(f)
@@ -157,7 +157,7 @@ class GenDoc : CliktCommand() {
     }
 
     fun run(
-        ctx: KeYParser.FileContext,
+        ctx: JavaKeYParser.FileContext,
         f: Path,
     ) {
         try {

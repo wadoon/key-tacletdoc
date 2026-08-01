@@ -1,16 +1,14 @@
 package io.github.wadoon.tadoc.tpp.format
 
-import de.uka.ilkd.key.nparser.KeYLexer
-import de.uka.ilkd.key.nparser.KeYParser
-import de.uka.ilkd.key.nparser.KeYParser.IfThenElseTermContext
-import de.uka.ilkd.key.nparser.KeYParser.Unary_minus_termContext
-import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
+import de.uka.ilkd.key.nparser.*
+import de.uka.ilkd.key.nparser.JavaKeYParser.*
+import de.uka.ilkd.key.nparser.JavaKeYParserBaseVisitor
 import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.TerminalNode
 import java.util.*
 import kotlin.math.min
 
-class ExpressionVisitor(private val ts: CommonTokenStream, private val output: Output) : KeYParserBaseVisitor<Unit>() {
+class ExpressionVisitor(private val ts: CommonTokenStream, private val output: Output) : JavaKeYParserBaseVisitor<Unit>() {
     override fun visitTerminal(node: TerminalNode) {
         val token = node.symbol.type
 

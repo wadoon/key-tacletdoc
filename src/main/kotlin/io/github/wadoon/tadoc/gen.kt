@@ -18,15 +18,16 @@
  */
 package io.github.wadoon.tadoc
 
-import de.uka.ilkd.key.nparser.KeYParser
-import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
+import de.uka.ilkd.key.nparser.JavaKeYParser
+import de.uka.ilkd.key.nparser.JavaKeYParserBaseVisitor
 import java.util.concurrent.TimeUnit
 
 fun execute(vararg args: String): String {
     // App.putln(args.joinToString(" "))
-    val pb = ProcessBuilder(args.toList())
-        .redirectErrorStream(true)
-        .redirectOutput(ProcessBuilder.Redirect.PIPE)
+    val pb =
+        ProcessBuilder(args.toList())
+            .redirectErrorStream(true)
+            .redirectOutput(ProcessBuilder.Redirect.PIPE)
     val p = pb.start()
     p.waitFor(1, TimeUnit.SECONDS)
     return p.inputStream.reader().readText()
@@ -36,61 +37,64 @@ val GIT_VERSION by lazy {
     execute("git", "describe", "--all")
 }
 
-class Indexer(val self: String, val index: Index) : KeYParserBaseVisitor<Unit>() {
-    override fun visitFile(ctx: KeYParser.FileContext) {
+class Indexer(
+    val self: String,
+    val index: Index,
+) : JavaKeYParserBaseVisitor<Unit>() {
+    override fun visitFile(ctx: JavaKeYParser.FileContext) {
         index += Symbol.file(self, ctx)
         super.visitFile(ctx)
     }
 
-    override fun visitOne_sort_decl(ctx: KeYParser.One_sort_declContext) {
-        for (name in ctx.sortIds.simple_ident_dots()) {
+    override fun visitOne_sort_decl(ctx: JavaKeYParser.One_sort_declContext) {
+        for (name in ctx.sortIds.simple_ident_dots_with_docs()) {
             index += Symbol.sort(self, name.text, name)
         }
     }
 
-    override fun visitFunc_decl(ctx: KeYParser.Func_declContext) {
+    override fun visitFunc_decl(ctx: JavaKeYParser.Func_declContext) {
         index += Symbol.function(self, ctx.func_name.text, ctx)
     }
 
-    override fun visitTransform_decl(ctx: KeYParser.Transform_declContext) {
+    override fun visitTransform_decl(ctx: JavaKeYParser.Transform_declContext) {
         index += Symbol.transformer(self, ctx.trans_name.text, ctx)
     }
 
-    override fun visitPred_decl(ctx: KeYParser.Pred_declContext) {
+    override fun visitPred_decl(ctx: JavaKeYParser.Pred_declContext) {
         index += Symbol.predicate(self, ctx.pred_name.text, ctx)
     }
 
-    override fun visitTaclet(ctx: KeYParser.TacletContext) {
+    override fun visitTaclet(ctx: JavaKeYParser.TacletContext) {
         index += Symbol.taclet(self, ctx.name.text, ctx)
     }
 
-    override fun visitChoice(ctx: KeYParser.ChoiceContext) {
+    override fun visitChoice(ctx: JavaKeYParser.ChoiceContext) {
         index += Symbol.choiceCategory(self, ctx.category.text)
         ctx.optionDecl().forEach { co ->
             index += Symbol.choiceOption(self, ctx.category.text, co.IDENT.text, co)
         }
     }
 
-    override fun visitRuleset_decls(ctx: KeYParser.Ruleset_declsContext) {
+    override fun visitRuleset_decls(ctx: JavaKeYParser.Ruleset_declsContext) {
         ctx.id.forEach {
             index += Symbol.ruleset(it.text, self, it)
         }
     }
 
-    override fun visitOne_contract(ctx: KeYParser.One_contractContext) {
+    override fun visitOne_contract(ctx: JavaKeYParser.One_contractContext) {
         index += Symbol.contract(ctx.contractName.text, self, ctx)
     }
 
-    override fun visitOne_invariant(ctx: KeYParser.One_invariantContext) {
+    override fun visitOne_invariant(ctx: JavaKeYParser.One_invariantContext) {
         index += Symbol.invariant(ctx.invName.text, self, ctx)
     }
 
-    override fun visitDatatype_decl(ctx: KeYParser.Datatype_declContext) {
+    override fun visitDatatype_decl(ctx: JavaKeYParser.Datatype_declContext) {
         index += Symbol.datatype(self, ctx.name.text, ctx)
         index += Symbol.sort(self, ctx.name.text, ctx)
     }
 
-    override fun visitDatatype_constructor(ctx: KeYParser.Datatype_constructorContext) {
+    override fun visitDatatype_constructor(ctx: JavaKeYParser.Datatype_constructorContext) {
         index += Symbol.function(self, ctx.name.text, ctx)
     }
 }
@@ -103,14 +107,16 @@ open class Symbol(
     val url: String,
     val target: String = displayName,
     val type: Type,
-    val ctx: Any? = null
+    val ctx: Any? = null,
 ) {
     open val anchor
         get() = "$type-$target"
     open val href
         get() = "$url#$anchor"
 
-    enum class Type(val navigationTitle: String) {
+    enum class Type(
+        val navigationTitle: String,
+    ) {
         CATEGORY("Choice categories"),
         OPTION("Choice options"),
         SORT("Sorts"),
@@ -122,46 +128,113 @@ open class Symbol(
         CONTRACT("Contracts"),
         INVARIANT("Invariants"),
         FILE("Files"),
-        TOKEN("t"), EXTERNAL("ext"),
-        DATATYPE("Datatypes");
+        TOKEN("t"),
+        EXTERNAL("ext"),
+        DATATYPE("Datatypes"),
     }
 
     companion object {
-        fun choiceCategory(page: String, cat: String, ctx: Any? = null): Symbol =
-            Symbol(cat, page, cat, Type.CATEGORY, ctx)
+        fun choiceCategory(
+            page: String,
+            cat: String,
+            ctx: Any? = null,
+        ): Symbol = Symbol(cat, page, cat, Type.CATEGORY, ctx)
 
-        fun choiceOption(page: String, cat: String, option: String, ctx: Any? = null): Symbol =
-            Symbol("$cat:$option", page, "$cat-$option", Type.OPTION, ctx)
+        fun choiceOption(
+            page: String,
+            cat: String,
+            option: String,
+            ctx: Any? = null,
+        ): Symbol = Symbol("$cat:$option", page, "$cat-$option", Type.OPTION, ctx)
 
-        fun taclet(page: String, text: String, ctx: Any? = null) = Symbol(text, page, text, Type.TACLET, ctx)
-        fun predicate(page: String, text: String, ctx: Any? = null) = Symbol(text, page, text, Type.PREDICATE, ctx)
-        fun function(page: String, text: String, ctx: Any? = null) = Symbol(text, page, text, Type.FUNCTION, ctx)
-        fun sort(page: String, text: String, ctx: Any? = null) = Symbol(text, page, type = Type.SORT, ctx = ctx)
-        fun transformer(page: String, text: String, ctx: Any? = null) = Symbol(text, page, text, Type.TRANSFORMER, ctx)
-        fun file(self: String, ctx: Any? = null) = Symbol(self.replace(".html", ""), self, "root", Type.FILE, ctx)
-        fun ruleset(name: String, page: String, ctx: Any? = null) = Symbol(name, page, name, Type.RULESET, ctx)
-        fun token(display: String, tokenType: Int) = TokenSymbol(display, tokenType)
-        fun external(url: String, anchor: String = "", ctx: Any? = null) =
-            object : Symbol("", url, "", Type.EXTERNAL, ctx) {
-                override val anchor: String = anchor
-                override val href = url
-            }
+        fun taclet(
+            page: String,
+            text: String,
+            ctx: Any? = null,
+        ) = Symbol(text, page, text, Type.TACLET, ctx)
 
-        fun contract(name: String, self: String, ctx: Any? = null) = Symbol(name, self, name, Type.CONTRACT, ctx)
-        fun invariant(name: String, self: String, ctx: Any? = null) = Symbol(name, self, name, Type.INVARIANT, ctx)
-        fun datatype(name: String, self: String, ctx: KeYParser.Datatype_declContext) = Symbol(name, self, name, Type.DATATYPE,ctx)
+        fun predicate(
+            page: String,
+            text: String,
+            ctx: Any? = null,
+        ) = Symbol(text, page, text, Type.PREDICATE, ctx)
+
+        fun function(
+            page: String,
+            text: String,
+            ctx: Any? = null,
+        ) = Symbol(text, page, text, Type.FUNCTION, ctx)
+
+        fun sort(
+            page: String,
+            text: String,
+            ctx: Any? = null,
+        ) = Symbol(text, page, type = Type.SORT, ctx = ctx)
+
+        fun transformer(
+            page: String,
+            text: String,
+            ctx: Any? = null,
+        ) = Symbol(text, page, text, Type.TRANSFORMER, ctx)
+
+        fun file(
+            self: String,
+            ctx: Any? = null,
+        ) = Symbol(self.replace(".html", ""), self, "root", Type.FILE, ctx)
+
+        fun ruleset(
+            name: String,
+            page: String,
+            ctx: Any? = null,
+        ) = Symbol(name, page, name, Type.RULESET, ctx)
+
+        fun token(
+            display: String,
+            tokenType: Int,
+        ) = TokenSymbol(display, tokenType)
+
+        fun external(
+            url: String,
+            anchor: String = "",
+            ctx: Any? = null,
+        ) = object : Symbol("", url, "", Type.EXTERNAL, ctx) {
+            override val anchor: String = anchor
+            override val href = url
+        }
+
+        fun contract(
+            name: String,
+            self: String,
+            ctx: Any? = null,
+        ) = Symbol(name, self, name, Type.CONTRACT, ctx)
+
+        fun invariant(
+            name: String,
+            self: String,
+            ctx: Any? = null,
+        ) = Symbol(name, self, name, Type.INVARIANT, ctx)
+
+        fun datatype(
+            name: String,
+            self: String,
+            ctx: JavaKeYParser.Datatype_declContext,
+        ) = Symbol(name, self, name, Type.DATATYPE, ctx)
     }
 
-    override fun toString(): String {
-        return "Symbol(displayName='$displayName', url='$url', target='$target', type=$type, ctx=$ctx, anchor='$anchor', href='$href')"
-    }
+    override fun toString(): String =
+        "Symbol(displayName='$displayName', url='$url', target='$target', type=$type, ctx=$ctx, anchor='$anchor', href='$href')"
 }
 
-data class TokenSymbol(val display: String, val tokenType: Int) :
-    Symbol(display, "https://key-project.org/docs/grammar/", display, Type.TOKEN)
+data class TokenSymbol(
+    val display: String,
+    val tokenType: Int,
+) : Symbol(display, "https://key-project.org/docs/grammar/", display, Type.TOKEN)
 
 typealias Index = ArrayList<Symbol>
 typealias Usages = MutableList<Symbol>
 typealias UsageIndex = MutableMap<Symbol, Usages>
 
-fun UsageIndex.add(used: Symbol, where: Symbol) = computeIfAbsent(used) { it -> ArrayList(1024) }.add(where)
+fun UsageIndex.add(
+    used: Symbol,
+    where: Symbol,
+) = computeIfAbsent(used) { it -> ArrayList(1024) }.add(where)

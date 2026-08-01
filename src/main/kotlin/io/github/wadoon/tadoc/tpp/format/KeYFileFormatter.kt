@@ -1,9 +1,7 @@
 package io.github.wadoon.tadoc.tpp.format
 
-import de.uka.ilkd.key.nparser.KeYLexer
-import de.uka.ilkd.key.nparser.KeYParser
-import de.uka.ilkd.key.nparser.KeYParser.*
-import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
+import de.uka.ilkd.key.nparser.*
+import de.uka.ilkd.key.nparser.JavaKeYParser.*
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.tree.RuleNode
 import org.antlr.v4.runtime.tree.TerminalNode
@@ -15,7 +13,7 @@ import java.util.stream.Collectors
 import kotlin.math.min
 import kotlin.system.exitProcess
 
-class KeYFileFormatter(private val ts: CommonTokenStream) : KeYParserBaseVisitor<Unit>() {
+class KeYFileFormatter(private val ts: CommonTokenStream) : JavaKeYParserBaseVisitor<Unit>() {
     val output: Output = Output()
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -233,8 +231,10 @@ class KeYFileFormatter(private val ts: CommonTokenStream) : KeYParserBaseVisitor
                 val text = t.text
                 if (t.type == KeYLexer.WS) {
                     val nls = countNLs(text)
-                    for (k in 0 until min(nls.toDouble(), MAX_NEWLINES_BETWEEN.toDouble())
-                        .toInt()) {
+                    repeat(
+                        min(nls.toDouble(), MAX_NEWLINES_BETWEEN.toDouble())
+                            .toInt()
+                    ) {
                         output.newLine()
                     }
                 } else {
@@ -350,13 +350,13 @@ class KeYFileFormatter(private val ts: CommonTokenStream) : KeYParserBaseVisitor
          */
         private fun format(text: String): String? {
             val `in` = CharStreams.fromString(text.replace("\\r\\n?".toRegex(), "\n"))
-            val lexer = KeYLexer(`in`)
+            val lexer = JavaKeYLexer(`in`)
             lexer.tokenFactory = CommonTokenFactory(true)
 
             val tokens = CommonTokenStream(lexer)
             tokens.fill()
 
-            val parser = KeYParser(tokens)
+            val parser = JavaKeYParser(tokens)
             val ctx = parser.file()
             if (parser.numberOfSyntaxErrors > 0) {
                 return null

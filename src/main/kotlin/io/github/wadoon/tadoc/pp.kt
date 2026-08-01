@@ -18,9 +18,10 @@
  */
 package io.github.wadoon.tadoc
 
-import de.uka.ilkd.key.nparser.KeYLexer
-import de.uka.ilkd.key.nparser.KeYParser
-import de.uka.ilkd.key.nparser.KeYParserBaseVisitor
+import KeYLexer
+import de.uka.ilkd.key.nparser.JavaKeYLexer
+import de.uka.ilkd.key.nparser.JavaKeYParser
+import de.uka.ilkd.key.nparser.JavaKeYParserBaseVisitor
 import io.github.wadoon.pp.*
 import io.github.wadoon.tadoc.Symbol.Type.SORT
 import kotlinx.html.Entities
@@ -52,8 +53,8 @@ class PrettyPrinterDoc(
     val printReferences: Boolean = false,
     val printColor: Boolean = false,
     private val usageIndex: UsageIndex = HashMap()
-) : KeYParserBaseVisitor<Document>() {
-    private val vocabulary = KeYLexer(CharStreams.fromString("")).vocabulary
+) : JavaKeYParserBaseVisitor<Document>() {
+    private val vocabulary = JavaKeYLexer(CharStreams.fromString("")).vocabulary
     private val tokenSymbols = index.filterIsInstance<TokenSymbol>()
 
     override fun aggregateResult(aggregate: Document?, nextResult: Document?) =
@@ -135,39 +136,39 @@ class PrettyPrinterDoc(
 
     override fun defaultResult() = empty
 
-    override fun visitProblem(ctx: KeYParser.ProblemContext?): Document {
+    override fun visitProblem(ctx: JavaKeYParser.ProblemContext?): Document {
         return super.visitProblem(ctx)
     }
 
-    override fun visitOne_include_statement(ctx: KeYParser.One_include_statementContext?): Document {
+    override fun visitOne_include_statement(ctx: JavaKeYParser.One_include_statementContext?): Document {
         return super.visitOne_include_statement(ctx)
     }
 
-    override fun visitOne_include(ctx: KeYParser.One_includeContext?): Document {
+    override fun visitOne_include(ctx: JavaKeYParser.One_includeContext?): Document {
         return super.visitOne_include(ctx)
     }
 
-    override fun visitOptions_choice(ctx: KeYParser.Options_choiceContext?): Document {
+    override fun visitOptions_choice(ctx: JavaKeYParser.Options_choiceContext?): Document {
         return super.visitOptions_choice(ctx)
     }
 
-    override fun visitActivated_choice(ctx: KeYParser.Activated_choiceContext?): Document {
+    override fun visitActivated_choice(ctx: JavaKeYParser.Activated_choiceContext?): Document {
         return super.visitActivated_choice(ctx)
     }
 
-    override fun visitOption_decls(ctx: KeYParser.Option_declsContext?): Document {
+    override fun visitOption_decls(ctx: JavaKeYParser.Option_declsContext?): Document {
         return super.visitOption_decls(ctx)
     }
 
-    override fun visitChoice(ctx: KeYParser.ChoiceContext?): Document {
+    override fun visitChoice(ctx: JavaKeYParser.ChoiceContext?): Document {
         return super.visitChoice(ctx)
     }
 
-    override fun visitSort_decls(ctx: KeYParser.Sort_declsContext?): Document {
+    override fun visitSort_decls(ctx: JavaKeYParser.Sort_declsContext?): Document {
         return super.visitSort_decls(ctx)
     }
 
-    override fun visitOne_sort_decl(ctx: KeYParser.One_sort_declContext): Document {
+    override fun visitOne_sort_decl(ctx: JavaKeYParser.One_sort_declContext): Document {
         var doc: Document = empty
 
         if (null != ctx.GENERIC()) {
@@ -182,7 +183,8 @@ class PrettyPrinterDoc(
             doc = doc + precede(ctx.ABSTRACT().text, break1)
         }
 
-        doc = doc + ctx.sortIds.simple_ident_dots().flowMap(comma + space) { string(Entities.it.text) }
+        doc += ctx.sortIds.simple_ident_dots_with_docs()
+            .flowMap(comma + space) { string(Entities.it.text) }
 
         if (null != ctx.ONEOF()) {
             doc = doc + space + ctx.ONEOF().text + space +
@@ -210,196 +212,194 @@ class PrettyPrinterDoc(
         }
     }
 
-    override fun visitFile(ctx: KeYParser.FileContext): Document =
+    override fun visitFile(ctx: JavaKeYParser.FileContext): Document =
         ctx.decls().accept(this) + hardline + (ctx.problem()?.accept(this) ?: blank(0))
 
-    override fun visitDecls(ctx: KeYParser.DeclsContext): Document =
+    override fun visitDecls(ctx: JavaKeYParser.DeclsContext): Document =
         ctx.children.map { it.accept(this) }.reduce { a, b -> a + hardline + b }
 
 
-    override fun visitSimple_ident_dots(ctx: KeYParser.Simple_ident_dotsContext?): Document {
+    override fun visitSimple_ident_dots(ctx: JavaKeYParser.Simple_ident_dotsContext?): Document {
         return super.visitSimple_ident_dots(ctx)
     }
 
-    override fun visitSimple_ident_dots_comma_list(ctx: KeYParser.Simple_ident_dots_comma_listContext?): Document {
+    override fun visitSimple_ident_dots_comma_list(ctx: JavaKeYParser.Simple_ident_dots_comma_listContext?): Document {
         return super.visitSimple_ident_dots_comma_list(ctx)
     }
 
-    override fun visitExtends_sorts(ctx: KeYParser.Extends_sortsContext?): Document {
+    override fun visitExtends_sorts(ctx: JavaKeYParser.Extends_sortsContext?): Document {
         return super.visitExtends_sorts(ctx)
     }
 
-    override fun visitOneof_sorts(ctx: KeYParser.Oneof_sortsContext?): Document {
+    override fun visitOneof_sorts(ctx: JavaKeYParser.Oneof_sortsContext?): Document {
         return super.visitOneof_sorts(ctx)
     }
 
-    override fun visitKeyjavatype(ctx: KeYParser.KeyjavatypeContext?): Document {
-        return super.visitKeyjavatype(ctx)
-    }
-
-    override fun visitProg_var_decls(ctx: KeYParser.Prog_var_declsContext?): Document {
+    override fun visitProg_var_decls(ctx: JavaKeYParser.Prog_var_declsContext?): Document {
         return super.visitProg_var_decls(ctx)
     }
 
-    override fun visitString_literal(ctx: KeYParser.String_literalContext?): Document {
+    override fun visitString_literal(ctx: JavaKeYParser.String_literalContext?): Document {
         return super.visitString_literal(ctx)
     }
 
-    override fun visitString_value(ctx: KeYParser.String_valueContext?): Document {
+    override fun visitString_value(ctx: JavaKeYParser.String_valueContext?): Document {
         return super.visitString_value(ctx)
     }
 
-    override fun visitSimple_ident(ctx: KeYParser.Simple_identContext?): Document {
+    override fun visitSimple_ident(ctx: JavaKeYParser.Simple_identContext?): Document {
         return super.visitSimple_ident(ctx)
     }
 
-    override fun visitSimple_ident_comma_list(ctx: KeYParser.Simple_ident_comma_listContext?): Document {
+    override fun visitSimple_ident_comma_list(ctx: JavaKeYParser.Simple_ident_comma_listContext?): Document {
         return super.visitSimple_ident_comma_list(ctx)
     }
 
-    override fun visitSchema_var_decls(ctx: KeYParser.Schema_var_declsContext): Document =
+    override fun visitSchema_var_decls(ctx: JavaKeYParser.Schema_var_declsContext): Document =
         docOf(ctx.SCHEMAVARIABLES()) + bblock(
             ctx.one_schema_var_decl().map { docOf(it) }.join(break0)
         )
 
-    override fun visitOne_schema_var_decl(ctx: KeYParser.One_schema_var_declContext): Document =
+    override fun visitOne_schema_var_decl(ctx: JavaKeYParser.One_schema_var_declContext): Document =
         joinChildren(ctx)
 
     private fun joinChildren(ctx: ParserRuleContext): Document =
         ctx.children.map { it.accept(this) }.join(space)
 
-    override fun visitSchema_modifiers(ctx: KeYParser.Schema_modifiersContext?): Document {
+    override fun visitSchema_modifiers(ctx: JavaKeYParser.Schema_modifiersContext?): Document {
         return super.visitSchema_modifiers(ctx)
     }
 
-    override fun visitOne_schema_modal_op_decl(ctx: KeYParser.One_schema_modal_op_declContext?): Document {
+    override fun visitOne_schema_modal_op_decl(ctx: JavaKeYParser.One_schema_modal_op_declContext?): Document {
         return super.visitOne_schema_modal_op_decl(ctx)
     }
 
-    override fun visitPred_decl(ctx: KeYParser.Pred_declContext?): Document {
+    override fun visitPred_decl(ctx: JavaKeYParser.Pred_declContext?): Document {
         return super.visitPred_decl(ctx)
     }
 
     fun bblock(doc: Document) = braces(indent(hardline + doc) + hardline)
 
-    override fun visitPred_decls(ctx: KeYParser.Pred_declsContext): Document =
+    override fun visitPred_decls(ctx: JavaKeYParser.Pred_declsContext): Document =
         docOf(ctx.PREDICATES()) + bblock(
             indent(
                 ctx.pred_decl().map { docOf(it) }.join(hardline)
             )
         )
 
-    override fun visitFunc_decl(ctx: KeYParser.Func_declContext?): Document {
+    override fun visitFunc_decl(ctx: JavaKeYParser.Func_declContext?): Document {
         return super.visitFunc_decl(ctx)
     }
 
     fun indent(doc: Document) = nest(INDENT, doc)
-    override fun visitFunc_decls(ctx: KeYParser.Func_declsContext): Document =
+    override fun visitFunc_decls(ctx: JavaKeYParser.Func_declsContext): Document =
         docOf(ctx.FUNCTIONS()) + bblock(
             ctx.func_decl().map { docOf(it) }.join(hardline)
         )
 
-    override fun visitArg_sorts_or_formula(ctx: KeYParser.Arg_sorts_or_formulaContext): Document {
+    override fun visitArg_sorts_or_formula(ctx: JavaKeYParser.Arg_sorts_or_formulaContext): Document {
         return super.visitArg_sorts_or_formula(ctx)
     }
 
-    override fun visitArg_sorts_or_formula_helper(ctx: KeYParser.Arg_sorts_or_formula_helperContext?): Document {
+    override fun visitArg_sorts_or_formula_helper(ctx: JavaKeYParser.Arg_sorts_or_formula_helperContext?): Document {
         return super.visitArg_sorts_or_formula_helper(ctx)
     }
 
-    override fun visitTransform_decl(ctx: KeYParser.Transform_declContext?): Document {
+    override fun visitTransform_decl(ctx: JavaKeYParser.Transform_declContext?): Document {
         return super.visitTransform_decl(ctx)
     }
 
-    override fun visitTransform_decls(ctx: KeYParser.Transform_declsContext?): Document {
+    override fun visitTransform_decls(ctx: JavaKeYParser.Transform_declsContext?): Document {
         return super.visitTransform_decls(ctx)
     }
 
-    override fun visitArrayopid(ctx: KeYParser.ArrayopidContext?): Document {
+    override fun visitArrayopid(ctx: JavaKeYParser.ArrayopidContext?): Document {
         return super.visitArrayopid(ctx)
     }
 
-    override fun visitArg_sorts(ctx: KeYParser.Arg_sortsContext?): Document {
+    override fun visitArg_sorts(ctx: JavaKeYParser.Arg_sortsContext?): Document {
         return super.visitArg_sorts(ctx)
     }
 
-    override fun visitWhere_to_bind(ctx: KeYParser.Where_to_bindContext?): Document {
+    override fun visitWhere_to_bind(ctx: JavaKeYParser.Where_to_bindContext?): Document {
         return super.visitWhere_to_bind(ctx)
     }
 
-    override fun visitRuleset_decls(ctx: KeYParser.Ruleset_declsContext): Document =
+    override fun visitRuleset_decls(ctx: JavaKeYParser.Ruleset_declsContext): Document =
         docOf(ctx.HEURISTICSDECL()) + bblock(
-            ctx.simple_ident().map { docOf(it) }.join(string(",") + space)
+            ctx.simple_ident_with_doc().map { docOf(it) }.join(string(",") + space)
         )
 
-    override fun visitSortId(ctx: KeYParser.SortIdContext): Document {
+    override fun visitSortId(ctx: JavaKeYParser.SortIdContext): Document {
         return ref(ctx.text, SORT)
     }
 
-    override fun visitId_declaration(ctx: KeYParser.Id_declarationContext?): Document {
+    override fun visitId_declaration(ctx: JavaKeYParser.Id_declarationContext?): Document {
         return super.visitId_declaration(ctx)
     }
 
-    override fun visitFuncpred_name(ctx: KeYParser.Funcpred_nameContext): Document {
-        return (ctx.sortId()?.let { accept(it) + ctx.DOUBLECOLON().text } ?: empty) + ref(
-            ctx.simple_ident_dots().text,
+    override fun visitFuncpred_name(ctx: JavaKeYParser.Funcpred_nameContext): Document {
+        return (if (ctx.DOUBLECOLON() != null) {
+            accept(ctx.simple_ident_dots(0)) + ctx.DOUBLECOLON().text
+        } else empty) + ref(
+            ctx.name.text,
             Symbol.Type.PREDICATE, Symbol.Type.TRANSFORMER, Symbol.Type.FUNCTION
         )
     }
 
-    override fun visitTermEOF(ctx: KeYParser.TermEOFContext?): Document {
+    override fun visitTermEOF(ctx: JavaKeYParser.TermEOFContext?): Document {
         return super.visitTermEOF(ctx)
     }
 
-    override fun visitBoolean_literal(ctx: KeYParser.Boolean_literalContext?): Document {
+    override fun visitBoolean_literal(ctx: JavaKeYParser.Boolean_literalContext?): Document {
         return super.visitBoolean_literal(ctx)
     }
 
-    override fun visitLiterals(ctx: KeYParser.LiteralsContext?): Document {
+    override fun visitLiterals(ctx: JavaKeYParser.LiteralsContext?): Document {
         return super.visitLiterals(ctx)
     }
 
-    override fun visitEquivalence_term(ctx: KeYParser.Equivalence_termContext?): Document {
+    override fun visitEquivalence_term(ctx: JavaKeYParser.Equivalence_termContext?): Document {
         return super.visitEquivalence_term(ctx)
     }
 
-    override fun visitTermParen(ctx: KeYParser.TermParenContext?): Document {
+    override fun visitTermParen(ctx: JavaKeYParser.TermParenContext?): Document {
         return super.visitTermParen(ctx)
     }
 
-    override fun visitArgument_list(ctx: KeYParser.Argument_listContext?): Document {
+    override fun visitArgument_list(ctx: JavaKeYParser.Argument_listContext?): Document {
         return super.visitArgument_list(ctx)
     }
 
-    override fun visitInteger(ctx: KeYParser.IntegerContext?): Document {
+    override fun visitInteger(ctx: JavaKeYParser.IntegerContext?): Document {
         return super.visitInteger(ctx)
     }
 
-    override fun visitFloatLiteral(ctx: KeYParser.FloatLiteralContext?): Document {
+    override fun visitFloatLiteral(ctx: JavaKeYParser.FloatLiteralContext?): Document {
         return super.visitFloatLiteral(ctx)
     }
 
-    override fun visitDoubleLiteral(ctx: KeYParser.DoubleLiteralContext?): Document {
+    override fun visitDoubleLiteral(ctx: JavaKeYParser.DoubleLiteralContext?): Document {
         return super.visitDoubleLiteral(ctx)
     }
 
-    override fun visitRealLiteral(ctx: KeYParser.RealLiteralContext?): Document {
+    override fun visitRealLiteral(ctx: JavaKeYParser.RealLiteralContext?): Document {
         return super.visitRealLiteral(ctx)
     }
 
-    override fun visitChar_literal(ctx: KeYParser.Char_literalContext?): Document {
+    override fun visitChar_literal(ctx: JavaKeYParser.Char_literalContext?): Document {
         return super.visitChar_literal(ctx)
     }
 
-    override fun visitVarId(ctx: KeYParser.VarIdContext?): Document {
+    override fun visitVarId(ctx: JavaKeYParser.VarIdContext?): Document {
         return super.visitVarId(ctx)
     }
 
-    override fun visitVarIds(ctx: KeYParser.VarIdsContext?): Document {
+    override fun visitVarIds(ctx: JavaKeYParser.VarIdsContext?): Document {
         return super.visitVarIds(ctx)
     }
 
-    override fun visitTriggers(ctx: KeYParser.TriggersContext?): Document {
+    override fun visitTriggers(ctx: JavaKeYParser.TriggersContext?): Document {
         return super.visitTriggers(ctx)
     }
 
@@ -418,7 +418,7 @@ class PrettyPrinterDoc(
         if (ctx == null) empty
         else leading + accept(ctx) + trailing
 
-    override fun visitTaclet(ctx: KeYParser.TacletContext): Document =
+    override fun visitTaclet(ctx: JavaKeYParser.TacletContext): Document =
         docOf(ctx.LEMMA(), trailing = space) + docOf(ctx.name) + docOf(ctx.choices_) + space + bblock(
             docOf(ctx.form) + (
                     if (ctx.SCHEMAVAR().isNotEmpty()) {
@@ -429,7 +429,7 @@ class PrettyPrinterDoc(
                         )
                     } else empty
                     )
-                    + (ctx.ifSeq?.let { docOf(ctx.ASSUMES()) + parens(accept(it)) + hardline } ?: empty)
+                    + (ctx.assumesSeq?.let { docOf(ctx.ASSUMES()) + parens(accept(it)) + hardline } ?: empty)
                     + (ctx.find?.let { docOf(ctx.FIND()) + parens(space + accept(ctx.find) + space) + hardline }
                 ?: empty)
                     + (if (ctx.SAMEUPDATELEVEL().isNotEmpty()) docOf(
@@ -458,9 +458,9 @@ class PrettyPrinterDoc(
                     + docOf(ctx.goalspecs()) + docOf(ctx.modifiers()) + hardline
         ) + semi
 
-    override fun visitModifiers(ctx: KeYParser.ModifiersContext): Document {
+    override fun visitModifiers(ctx: JavaKeYParser.ModifiersContext): Document {
         var d: Document = empty
-        for (i in 0 until ctx.rulesets().size) {
+        repeat(ctx.rulesets().size) {
             d = d + docOf(ctx.rulesets(0)) + hardline
         }
 
@@ -480,93 +480,93 @@ class PrettyPrinterDoc(
         return d
     }
 
-    override fun visitSeq(ctx: KeYParser.SeqContext?): Document {
+    override fun visitSeq(ctx: JavaKeYParser.SeqContext?): Document {
         return super.visitSeq(ctx)
     }
 
-    override fun visitSeqEOF(ctx: KeYParser.SeqEOFContext?): Document {
+    override fun visitSeqEOF(ctx: JavaKeYParser.SeqEOFContext?): Document {
         return super.visitSeqEOF(ctx)
     }
 
-    override fun visitTermorseq(ctx: KeYParser.TermorseqContext?): Document {
+    override fun visitTermorseq(ctx: JavaKeYParser.TermorseqContext?): Document {
         return super.visitTermorseq(ctx)
     }
 
-    override fun visitSemisequent(ctx: KeYParser.SemisequentContext?): Document {
+    override fun visitSemisequent(ctx: JavaKeYParser.SemisequentContext?): Document {
         return super.visitSemisequent(ctx)
     }
 
-    override fun visitVarexplist(ctx: KeYParser.VarexplistContext?): Document {
+    override fun visitVarexplist(ctx: JavaKeYParser.VarexplistContext?): Document {
         return super.visitVarexplist(ctx)
     }
 
-    override fun visitVarexpId(ctx: KeYParser.VarexpIdContext?): Document {
+    override fun visitVarexpId(ctx: JavaKeYParser.VarexpIdContext?): Document {
         return super.visitVarexpId(ctx)
     }
 
-    override fun visitVarexp_argument(ctx: KeYParser.Varexp_argumentContext?): Document {
+    override fun visitVarexp_argument(ctx: JavaKeYParser.Varexp_argumentContext?): Document {
         return super.visitVarexp_argument(ctx)
     }
 
-    override fun visitVarexp(ctx: KeYParser.VarexpContext?): Document {
+    override fun visitVarexp(ctx: JavaKeYParser.VarexpContext?): Document {
         return super.visitVarexp(ctx)
     }
 
-    override fun visitGoalspecs(ctx: KeYParser.GoalspecsContext): Document =
+    override fun visitGoalspecs(ctx: JavaKeYParser.GoalspecsContext): Document =
         if (ctx.CLOSEGOAL() != null) {
             accept(ctx.CLOSEGOAL())
         } else {
             ctx.goalspecwithoption().separateMap(semi + hardline) { accept(it) }
         } + hardline
 
-    override fun visitGoalspecwithoption(ctx: KeYParser.GoalspecwithoptionContext): Document =
+    override fun visitGoalspecwithoption(ctx: JavaKeYParser.GoalspecwithoptionContext): Document =
         if (ctx.option_list() == null) accept(ctx.goalspec())
         else docOf(ctx.option_list()) + space + nest(INDENT, braces(hardline + docOf(ctx.goalspec()))) + hardline
 
-    override fun visitOption(ctx: KeYParser.OptionContext?): Document {
+    override fun visitOption(ctx: JavaKeYParser.OptionContext?): Document {
         return super.visitOption(ctx)
     }
 
-    override fun visitOption_list(ctx: KeYParser.Option_listContext?): Document {
+    override fun visitOption_list(ctx: JavaKeYParser.Option_listContext?): Document {
         return super.visitOption_list(ctx)
     }
 
-    override fun visitGoalspec(ctx: KeYParser.GoalspecContext?): Document {
+    override fun visitGoalspec(ctx: JavaKeYParser.GoalspecContext?): Document {
         return super.visitGoalspec(ctx)
     }
 
-    override fun visitReplacewith(ctx: KeYParser.ReplacewithContext?): Document {
+    override fun visitReplacewith(ctx: JavaKeYParser.ReplacewithContext?): Document {
         return super.visitReplacewith(ctx)
     }
 
-    override fun visitAdd(ctx: KeYParser.AddContext?): Document {
+    override fun visitAdd(ctx: JavaKeYParser.AddContext?): Document {
         return super.visitAdd(ctx)
     }
 
-    override fun visitAddrules(ctx: KeYParser.AddrulesContext?): Document {
+    override fun visitAddrules(ctx: JavaKeYParser.AddrulesContext?): Document {
         return super.visitAddrules(ctx)
     }
 
-    override fun visitAddprogvar(ctx: KeYParser.AddprogvarContext?): Document {
+    override fun visitAddprogvar(ctx: JavaKeYParser.AddprogvarContext?): Document {
         return super.visitAddprogvar(ctx)
     }
 
-    override fun visitTacletlist(ctx: KeYParser.TacletlistContext?): Document {
+    override fun visitTacletlist(ctx: JavaKeYParser.TacletlistContext?): Document {
         return super.visitTacletlist(ctx)
     }
 
-    override fun visitPvset(ctx: KeYParser.PvsetContext?): Document {
+    override fun visitPvset(ctx: JavaKeYParser.PvsetContext?): Document {
         return super.visitPvset(ctx)
     }
 
-    override fun visitRulesets(ctx: KeYParser.RulesetsContext) =
+    override fun visitRulesets(ctx: JavaKeYParser.RulesetsContext) =
         docOf(ctx.HEURISTICS()) + parens(
             ctx.ruleset().separateMap(comma + space) { accept(it) }
         )
 
-    override fun visitRuleset(ctx: KeYParser.RulesetContext) = ref(ctx.text, Symbol.Type.RULESET)
+    override fun visitRuleset(ctx: JavaKeYParser.RulesetContext) = ref(ctx.text, Symbol.Type.RULESET)
 
-    override fun visitRulesOrAxioms(ctx: KeYParser.RulesOrAxiomsContext) =
+    override fun visitRulesOrAxioms(ctx: JavaKeYParser.RulesOrAxiomsContext) =
         docOf(ctx.AXIOMS() ?: ctx.RULES()) + docOf(ctx.option_list(), lparen, rparen) + bblock(
             ctx.taclet().map { docOf(it) }.join(hardline + hardline)
         )
@@ -586,9 +586,9 @@ class PrettyPrinterStr(
     val currentContext: Symbol,
     val printReferences: Boolean = true,
     private val usageIndex: UsageIndex = HashMap()
-) : KeYParserBaseVisitor<String>() {
+) : JavaKeYParserBaseVisitor<String>() {
 
-    private val vocabulary = KeYLexer(CharStreams.fromString("")).vocabulary
+    private val vocabulary = JavaKeYLexer(CharStreams.fromString("")).vocabulary
     private val tokenSymbols = index.filterIsInstance<TokenSymbol>()
 
     override fun aggregateResult(aggregate: String?, nextResult: String?) =
@@ -652,39 +652,39 @@ class PrettyPrinterStr(
 
     override fun defaultResult() = " "
 
-    override fun visitProblem(ctx: KeYParser.ProblemContext?): String {
+    override fun visitProblem(ctx: JavaKeYParser.ProblemContext?): String {
         return super.visitProblem(ctx)
     }
 
-    override fun visitOne_include_statement(ctx: KeYParser.One_include_statementContext?): String {
+    override fun visitOne_include_statement(ctx: JavaKeYParser.One_include_statementContext?): String {
         return super.visitOne_include_statement(ctx)
     }
 
-    override fun visitOne_include(ctx: KeYParser.One_includeContext?): String {
+    override fun visitOne_include(ctx: JavaKeYParser.One_includeContext?): String {
         return super.visitOne_include(ctx)
     }
 
-    override fun visitOptions_choice(ctx: KeYParser.Options_choiceContext?): String {
+    override fun visitOptions_choice(ctx: JavaKeYParser.Options_choiceContext?): String {
         return super.visitOptions_choice(ctx)
     }
 
-    override fun visitActivated_choice(ctx: KeYParser.Activated_choiceContext?): String {
+    override fun visitActivated_choice(ctx: JavaKeYParser.Activated_choiceContext?): String {
         return super.visitActivated_choice(ctx)
     }
 
-    override fun visitOption_decls(ctx: KeYParser.Option_declsContext?): String {
+    override fun visitOption_decls(ctx: JavaKeYParser.Option_declsContext?): String {
         return super.visitOption_decls(ctx)
     }
 
-    override fun visitChoice(ctx: KeYParser.ChoiceContext?): String {
+    override fun visitChoice(ctx: JavaKeYParser.ChoiceContext?): String {
         return super.visitChoice(ctx)
     }
 
-    override fun visitSort_decls(ctx: KeYParser.Sort_declsContext?): String {
+    override fun visitSort_decls(ctx: JavaKeYParser.Sort_declsContext?): String {
         return super.visitSort_decls(ctx)
     }
 
-    override fun visitOne_sort_decl(ctx: KeYParser.One_sort_declContext): String =
+    override fun visitOne_sort_decl(ctx: JavaKeYParser.One_sort_declContext): String =
         buildString {
             if (null != ctx.GENERIC()) {
                 append(ctx.GENERIC().text).append(" ")
@@ -698,7 +698,7 @@ class PrettyPrinterStr(
                 append(ctx.ABSTRACT().text).append(" ")
             }
 
-            ctx.sortIds.simple_ident_dots().joinTo(this, ", ") {
+            ctx.sortIds.simple_ident_dots_with_docs().joinTo(this, ", ") {
                 it.text
             }
 
@@ -732,169 +732,170 @@ class PrettyPrinterStr(
             }
     }
 
-    override fun visitSimple_ident_dots(ctx: KeYParser.Simple_ident_dotsContext?): String {
+    override fun visitSimple_ident_dots(ctx: JavaKeYParser.Simple_ident_dotsContext?): String {
         return super.visitSimple_ident_dots(ctx)
     }
 
-    override fun visitSimple_ident_dots_comma_list(ctx: KeYParser.Simple_ident_dots_comma_listContext?): String {
+    override fun visitSimple_ident_dots_comma_list(ctx: JavaKeYParser.Simple_ident_dots_comma_listContext?): String {
         return super.visitSimple_ident_dots_comma_list(ctx)
     }
 
-    override fun visitExtends_sorts(ctx: KeYParser.Extends_sortsContext?): String {
+    override fun visitExtends_sorts(ctx: JavaKeYParser.Extends_sortsContext?): String {
         return super.visitExtends_sorts(ctx)
     }
 
-    override fun visitOneof_sorts(ctx: KeYParser.Oneof_sortsContext?): String {
+    override fun visitOneof_sorts(ctx: JavaKeYParser.Oneof_sortsContext?): String {
         return super.visitOneof_sorts(ctx)
     }
 
-    override fun visitKeyjavatype(ctx: KeYParser.KeyjavatypeContext?): String {
-        return super.visitKeyjavatype(ctx)
-    }
-
-    override fun visitProg_var_decls(ctx: KeYParser.Prog_var_declsContext?): String {
+    override fun visitProg_var_decls(ctx: JavaKeYParser.Prog_var_declsContext?): String {
         return super.visitProg_var_decls(ctx)
     }
 
-    override fun visitString_literal(ctx: KeYParser.String_literalContext?): String {
+    override fun visitString_literal(ctx: JavaKeYParser.String_literalContext?): String {
         return super.visitString_literal(ctx)
     }
 
-    override fun visitString_value(ctx: KeYParser.String_valueContext?): String {
+    override fun visitString_value(ctx: JavaKeYParser.String_valueContext?): String {
         return super.visitString_value(ctx)
     }
 
-    override fun visitSimple_ident(ctx: KeYParser.Simple_identContext?): String {
+    override fun visitSimple_ident(ctx: JavaKeYParser.Simple_identContext?): String {
         return super.visitSimple_ident(ctx)
     }
 
-    override fun visitSimple_ident_comma_list(ctx: KeYParser.Simple_ident_comma_listContext?): String {
+    override fun visitSimple_ident_comma_list(ctx: JavaKeYParser.Simple_ident_comma_listContext?): String {
         return super.visitSimple_ident_comma_list(ctx)
     }
 
-    override fun visitSchema_var_decls(ctx: KeYParser.Schema_var_declsContext?): String {
+    override fun visitSchema_var_decls(ctx: JavaKeYParser.Schema_var_declsContext?): String {
         return super.visitSchema_var_decls(ctx)
     }
 
-    override fun visitOne_schema_var_decl(ctx: KeYParser.One_schema_var_declContext?): String {
+    override fun visitOne_schema_var_decl(ctx: JavaKeYParser.One_schema_var_declContext?): String {
         return super.visitOne_schema_var_decl(ctx)
     }
 
-    override fun visitSchema_modifiers(ctx: KeYParser.Schema_modifiersContext?): String {
+    override fun visitSchema_modifiers(ctx: JavaKeYParser.Schema_modifiersContext?): String {
         return super.visitSchema_modifiers(ctx)
     }
 
-    override fun visitOne_schema_modal_op_decl(ctx: KeYParser.One_schema_modal_op_declContext?): String {
+    override fun visitOne_schema_modal_op_decl(ctx: JavaKeYParser.One_schema_modal_op_declContext?): String {
         return super.visitOne_schema_modal_op_decl(ctx)
     }
 
-    override fun visitPred_decl(ctx: KeYParser.Pred_declContext?): String {
+    override fun visitPred_decl(ctx: JavaKeYParser.Pred_declContext?): String {
         return super.visitPred_decl(ctx)
     }
 
-    override fun visitPred_decls(ctx: KeYParser.Pred_declsContext?): String {
+    override fun visitPred_decls(ctx: JavaKeYParser.Pred_declsContext?): String {
         return super.visitPred_decls(ctx)
     }
 
-    override fun visitFunc_decl(ctx: KeYParser.Func_declContext?): String {
+    override fun visitFunc_decl(ctx: JavaKeYParser.Func_declContext?): String {
         return super.visitFunc_decl(ctx)
     }
 
-    override fun visitFunc_decls(ctx: KeYParser.Func_declsContext?): String {
+    override fun visitFunc_decls(ctx: JavaKeYParser.Func_declsContext?): String {
         return super.visitFunc_decls(ctx)
     }
 
-    override fun visitArg_sorts_or_formula(ctx: KeYParser.Arg_sorts_or_formulaContext?): String {
+    override fun visitArg_sorts_or_formula(ctx: JavaKeYParser.Arg_sorts_or_formulaContext?): String {
         return super.visitArg_sorts_or_formula(ctx)
     }
 
-    override fun visitArg_sorts_or_formula_helper(ctx: KeYParser.Arg_sorts_or_formula_helperContext?): String {
+    override fun visitArg_sorts_or_formula_helper(ctx: JavaKeYParser.Arg_sorts_or_formula_helperContext?): String {
         return super.visitArg_sorts_or_formula_helper(ctx)
     }
 
-    override fun visitTransform_decl(ctx: KeYParser.Transform_declContext?): String {
+    override fun visitTransform_decl(ctx: JavaKeYParser.Transform_declContext?): String {
         return super.visitTransform_decl(ctx)
     }
 
-    override fun visitTransform_decls(ctx: KeYParser.Transform_declsContext?): String {
+    override fun visitTransform_decls(ctx: JavaKeYParser.Transform_declsContext?): String {
         return super.visitTransform_decls(ctx)
     }
 
-    override fun visitArrayopid(ctx: KeYParser.ArrayopidContext?): String {
+    override fun visitArrayopid(ctx: JavaKeYParser.ArrayopidContext?): String {
         return super.visitArrayopid(ctx)
     }
 
-    override fun visitArg_sorts(ctx: KeYParser.Arg_sortsContext?): String {
+    override fun visitArg_sorts(ctx: JavaKeYParser.Arg_sortsContext?): String {
         return super.visitArg_sorts(ctx)
     }
 
-    override fun visitWhere_to_bind(ctx: KeYParser.Where_to_bindContext?): String {
+    override fun visitWhere_to_bind(ctx: JavaKeYParser.Where_to_bindContext?): String {
         return super.visitWhere_to_bind(ctx)
     }
 
-    override fun visitRuleset_decls(ctx: KeYParser.Ruleset_declsContext?): String {
+    override fun visitRuleset_decls(ctx: JavaKeYParser.Ruleset_declsContext?): String {
         return super.visitRuleset_decls(ctx)
     }
 
-    override fun visitSortId(ctx: KeYParser.SortIdContext): String {
+    override fun visitSortId(ctx: JavaKeYParser.SortIdContext): String {
         return ref(ctx.text, SORT)
     }
 
-    override fun visitId_declaration(ctx: KeYParser.Id_declarationContext?): String {
+    override fun visitId_declaration(ctx: JavaKeYParser.Id_declarationContext?): String {
         return super.visitId_declaration(ctx)
     }
 
-    override fun visitFuncpred_name(ctx: KeYParser.Funcpred_nameContext) = buildString {
-        ctx.sortId()?.let {
-            appendn(it)
+    override fun visitFuncpred_name(ctx: JavaKeYParser.Funcpred_nameContext) = buildString {
+        if (ctx.INT_LITERAL() != null) { // number
+            appendn(ctx.INT_LITERAL())
+        }
+
+        if (ctx.DOUBLECOLON() != null) {
+            appendn(ctx.simple_ident_dots(0))
             appendn(ctx.DOUBLECOLON())
         }
+
         append(
             ref(
-                ctx.simple_ident_dots().text,
+                ctx.name.text,
                 Symbol.Type.PREDICATE, Symbol.Type.TRANSFORMER, Symbol.Type.FUNCTION
             )
         )
     }
 
 
-    override fun visitTermEOF(ctx: KeYParser.TermEOFContext?): String {
+    override fun visitTermEOF(ctx: JavaKeYParser.TermEOFContext?): String {
         return super.visitTermEOF(ctx)
     }
 
-    override fun visitBoolean_literal(ctx: KeYParser.Boolean_literalContext?): String {
+    override fun visitBoolean_literal(ctx: JavaKeYParser.Boolean_literalContext?): String {
         return super.visitBoolean_literal(ctx)
     }
 
-    override fun visitLiterals(ctx: KeYParser.LiteralsContext?): String {
+    override fun visitLiterals(ctx: JavaKeYParser.LiteralsContext?): String {
         return super.visitLiterals(ctx)
     }
 
-    override fun visitEquivalence_term(ctx: KeYParser.Equivalence_termContext?): String {
+    override fun visitEquivalence_term(ctx: JavaKeYParser.Equivalence_termContext?): String {
         return super.visitEquivalence_term(ctx)
     }
 
-    override fun visitTermParen(ctx: KeYParser.TermParenContext?): String {
+    override fun visitTermParen(ctx: JavaKeYParser.TermParenContext?): String {
         return super.visitTermParen(ctx)
     }
 
-    override fun visitArgument_list(ctx: KeYParser.Argument_listContext?): String {
+    override fun visitArgument_list(ctx: JavaKeYParser.Argument_listContext?): String {
         return super.visitArgument_list(ctx)
     }
 
-    override fun visitChar_literal(ctx: KeYParser.Char_literalContext?): String {
+    override fun visitChar_literal(ctx: JavaKeYParser.Char_literalContext?): String {
         return super.visitChar_literal(ctx)
     }
 
-    override fun visitVarId(ctx: KeYParser.VarIdContext?): String {
+    override fun visitVarId(ctx: JavaKeYParser.VarIdContext?): String {
         return super.visitVarId(ctx)
     }
 
-    override fun visitVarIds(ctx: KeYParser.VarIdsContext?): String {
+    override fun visitVarIds(ctx: JavaKeYParser.VarIdsContext?): String {
         return super.visitVarIds(ctx)
     }
 
-    override fun visitTriggers(ctx: KeYParser.TriggersContext?): String {
+    override fun visitTriggers(ctx: JavaKeYParser.TriggersContext?): String {
         return super.visitTriggers(ctx)
     }
 
@@ -907,7 +908,7 @@ class PrettyPrinterStr(
         return this
     }
 
-    override fun visitTaclet(ctx: KeYParser.TacletContext) = buildString {
+    override fun visitTaclet(ctx: JavaKeYParser.TacletContext) = buildString {
         appendn(ctx.LEMMA(), " ")
         appendn(ctx.name)
 
@@ -927,7 +928,7 @@ class PrettyPrinterStr(
             }
         }
 
-        ctx.ifSeq?.let {
+        ctx.assumesSeq?.let {
             append(accept(ctx.ASSUMES()))
             append("(")
             append(accept(it))
@@ -962,8 +963,8 @@ class PrettyPrinterStr(
         append("\n};")
     }
 
-    override fun visitModifiers(ctx: KeYParser.ModifiersContext) = buildString {
-        for (i in 0 until ctx.rulesets().size) {
+    override fun visitModifiers(ctx: JavaKeYParser.ModifiersContext) = buildString {
+        repeat(ctx.rulesets().size) {
             appendn(ctx.rulesets(0)).append("\n")
         }
 
@@ -982,95 +983,95 @@ class PrettyPrinterStr(
         ctx.triggers().forEach { appendn(it) }
     }
 
-    override fun visitSeq(ctx: KeYParser.SeqContext?): String {
+    override fun visitSeq(ctx: JavaKeYParser.SeqContext?): String {
         return super.visitSeq(ctx)
     }
 
-    override fun visitSeqEOF(ctx: KeYParser.SeqEOFContext?): String {
+    override fun visitSeqEOF(ctx: JavaKeYParser.SeqEOFContext?): String {
         return super.visitSeqEOF(ctx)
     }
 
-    override fun visitTermorseq(ctx: KeYParser.TermorseqContext?): String {
+    override fun visitTermorseq(ctx: JavaKeYParser.TermorseqContext?): String {
         return super.visitTermorseq(ctx)
     }
 
-    override fun visitSemisequent(ctx: KeYParser.SemisequentContext?): String {
+    override fun visitSemisequent(ctx: JavaKeYParser.SemisequentContext?): String {
         return super.visitSemisequent(ctx)
     }
 
-    override fun visitVarexplist(ctx: KeYParser.VarexplistContext?): String {
+    override fun visitVarexplist(ctx: JavaKeYParser.VarexplistContext?): String {
         return super.visitVarexplist(ctx)
     }
 
-    override fun visitVarexpId(ctx: KeYParser.VarexpIdContext?): String {
+    override fun visitVarexpId(ctx: JavaKeYParser.VarexpIdContext?): String {
         return super.visitVarexpId(ctx)
     }
 
-    override fun visitVarexp_argument(ctx: KeYParser.Varexp_argumentContext?): String {
+    override fun visitVarexp_argument(ctx: JavaKeYParser.Varexp_argumentContext?): String {
         return super.visitVarexp_argument(ctx)
     }
 
-    override fun visitVarexp(ctx: KeYParser.VarexpContext?): String {
+    override fun visitVarexp(ctx: JavaKeYParser.VarexpContext?): String {
         return super.visitVarexp(ctx)
     }
 
-    override fun visitModality_term(ctx: KeYParser.Modality_termContext?): String {
+    override fun visitModality_term(ctx: JavaKeYParser.Modality_termContext?): String {
         return super.visitModality_term(ctx)
     }
 
-    override fun visitGoalspecs(ctx: KeYParser.GoalspecsContext) =
+    override fun visitGoalspecs(ctx: JavaKeYParser.GoalspecsContext) =
         if (ctx.CLOSEGOAL() != null) {
             accept(ctx.CLOSEGOAL())
         } else {
             ctx.goalspecwithoption().joinToString(";\n") { accept(it) }
         } + "\n"
 
-    override fun visitGoalspecwithoption(ctx: KeYParser.GoalspecwithoptionContext) =
+    override fun visitGoalspecwithoption(ctx: JavaKeYParser.GoalspecwithoptionContext) =
         if (ctx.option_list() == null) accept(ctx.goalspec())
         else buildString { appendn(ctx.option_list()).append(" {\n").appendn(ctx.goalspec()).append("}\n") }
 
-    override fun visitOption(ctx: KeYParser.OptionContext?): String {
+    override fun visitOption(ctx: JavaKeYParser.OptionContext?): String {
         return super.visitOption(ctx)
     }
 
-    override fun visitOption_list(ctx: KeYParser.Option_listContext?): String {
+    override fun visitOption_list(ctx: JavaKeYParser.Option_listContext?): String {
         return super.visitOption_list(ctx)
     }
 
-    override fun visitGoalspec(ctx: KeYParser.GoalspecContext?): String {
+    override fun visitGoalspec(ctx: JavaKeYParser.GoalspecContext?): String {
         return super.visitGoalspec(ctx)
     }
 
-    override fun visitReplacewith(ctx: KeYParser.ReplacewithContext?): String {
+    override fun visitReplacewith(ctx: JavaKeYParser.ReplacewithContext?): String {
         return super.visitReplacewith(ctx)
     }
 
-    override fun visitAdd(ctx: KeYParser.AddContext?): String {
+    override fun visitAdd(ctx: JavaKeYParser.AddContext?): String {
         return super.visitAdd(ctx)
     }
 
-    override fun visitAddrules(ctx: KeYParser.AddrulesContext?): String {
+    override fun visitAddrules(ctx: JavaKeYParser.AddrulesContext?): String {
         return super.visitAddrules(ctx)
     }
 
-    override fun visitAddprogvar(ctx: KeYParser.AddprogvarContext?): String {
+    override fun visitAddprogvar(ctx: JavaKeYParser.AddprogvarContext?): String {
         return super.visitAddprogvar(ctx)
     }
 
-    override fun visitTacletlist(ctx: KeYParser.TacletlistContext?): String {
+    override fun visitTacletlist(ctx: JavaKeYParser.TacletlistContext?): String {
         return super.visitTacletlist(ctx)
     }
 
-    override fun visitPvset(ctx: KeYParser.PvsetContext?): String {
+    override fun visitPvset(ctx: JavaKeYParser.PvsetContext?): String {
         return super.visitPvset(ctx)
     }
 
-    override fun visitRulesets(ctx: KeYParser.RulesetsContext) = buildString {
+    override fun visitRulesets(ctx: JavaKeYParser.RulesetsContext) = buildString {
         appendn(ctx.HEURISTICS())
         append(" (")
         ctx.ruleset().joinTo(this, ", ") { accept(it) }
         append(")")
     }
 
-    override fun visitRuleset(ctx: KeYParser.RulesetContext) = ref(ctx.text, Symbol.Type.RULESET)
+    override fun visitRuleset(ctx: JavaKeYParser.RulesetContext) = ref(ctx.text, Symbol.Type.RULESET)
 }
