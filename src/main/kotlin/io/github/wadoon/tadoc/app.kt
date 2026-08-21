@@ -116,14 +116,20 @@ class GenDoc : CliktCommand() {
                 }
         }
 
+    private val varcondDoc = VarcondDocModule(symbols,usageIndex)
+
+
     override fun run() {
         outputFolder.mkdirs()
         copyStaticFiles()
+
+        varcondDoc.addToIndex()
         tacletFiles
             .map(::index)
             .zip(tacletFiles)
             .forEach { (ctx, f) -> ctx?.let { run(it, f) } }
         ScriptDoc(symbols)
+        varcondDoc.page(File(outputFolder, "varcond.html")).manifest()
         generateIndex()
     }
 

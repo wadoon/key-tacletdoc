@@ -131,6 +131,7 @@ open class Symbol(
         TOKEN("t"),
         EXTERNAL("ext"),
         DATATYPE("Datatypes"),
+        VARCOND("Variable Conditions"),
     }
 
     companion object {
@@ -219,6 +220,8 @@ open class Symbol(
             self: String,
             ctx: JavaKeYParser.Datatype_declContext,
         ) = Symbol(name, self, name, Type.DATATYPE, ctx)
+
+        fun varcond(name: String, target: String) = Symbol(name, "varcond.html", target, Type.VARCOND)
     }
 
     override fun toString(): String =
