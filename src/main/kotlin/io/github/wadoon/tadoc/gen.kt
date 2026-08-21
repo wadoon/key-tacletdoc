@@ -128,10 +128,11 @@ open class Symbol(
         CONTRACT("Contracts"),
         INVARIANT("Invariants"),
         FILE("Files"),
-        TOKEN("t"),
+        TOKEN("Keyword"),
         EXTERNAL("ext"),
         DATATYPE("Datatypes"),
         VARCOND("Variable Conditions"),
+        SCRIPT_COMMAND("Script Commands"),
     }
 
     companion object {
@@ -222,6 +223,7 @@ open class Symbol(
         ) = Symbol(name, self, name, Type.DATATYPE, ctx)
 
         fun varcond(name: String, target: String) = Symbol(name, "varcond.html", target, Type.VARCOND)
+        fun scriptCommand(name: String, category: String?) = Symbol(name, "scripts.html", name, Type.SCRIPT_COMMAND)
     }
 
     override fun toString(): String =

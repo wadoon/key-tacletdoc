@@ -31,6 +31,7 @@ import de.uka.ilkd.key.nparser.JavaKeYParser
 import de.uka.ilkd.key.nparser.ParsingFacade
 import de.uka.ilkd.key.util.parsing.SyntaxErrorReporter.ParserException
 import io.github.wadoon.tadoc.scripts.ScriptDoc
+import io.github.wadoon.tadoc.scripts.ScriptDocModule
 import org.antlr.v4.runtime.CharStreams
 import java.io.File
 import java.nio.file.FileSystems
@@ -117,18 +118,22 @@ class GenDoc : CliktCommand() {
         }
 
     private val varcondDoc = VarcondDocModule(symbols,usageIndex)
+    private val scriptDoc = ScriptDocModule(symbols, usageIndex)
 
 
     override fun run() {
         outputFolder.mkdirs()
         copyStaticFiles()
 
+        scriptDoc.addToIndex()
         varcondDoc.addToIndex()
+
         tacletFiles
             .map(::index)
             .zip(tacletFiles)
             .forEach { (ctx, f) -> ctx?.let { run(it, f) } }
-        ScriptDoc(symbols)
+
+        scriptDoc.page(File(outputFolder, "scripts.html")).manifest()
         varcondDoc.page(File(outputFolder, "varcond.html")).manifest()
         generateIndex()
     }

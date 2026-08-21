@@ -18,7 +18,8 @@
  */
 package io.github.wadoon.tadoc
 
-import de.uka.ilkd.key.nparser.*
+import de.uka.ilkd.key.nparser.JavaKeYParser
+import de.uka.ilkd.key.nparser.JavaKeYParserBaseVisitor
 import io.github.wadoon.tadoc.Markdown.markdown
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
@@ -576,6 +577,14 @@ object Markdown {
                     .replaceAll(replacements)
             unsafe { +renderer.render(parser.parse(text)) }
         }
+    }
+
+    fun String.renderMarkdown() {
+        renderer.render(parser.parse(this))
+    }
+
+    fun HTMLTag.markdown(text: String) {
+        unsafe { +renderer.render(parser.parse(text)) }
     }
 
     val replacements =

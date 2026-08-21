@@ -18,152 +18,139 @@
  */
 package io.github.wadoon.tadoc.scripts
 
-import de.uka.ilkd.key.control.KeYEnvironment
 import de.uka.ilkd.key.macros.ProofMacro
-import de.uka.ilkd.key.proof.io.ProblemLoaderException
-import de.uka.ilkd.key.rule.Taclet
 import de.uka.ilkd.key.scripts.ProofScriptCommand
 import io.github.wadoon.tadoc.DefaultPage
 import io.github.wadoon.tadoc.Index
+import io.github.wadoon.tadoc.Markdown.markdown
+import io.github.wadoon.tadoc.Symbol
+import io.github.wadoon.tadoc.UsageIndex
 import kotlinx.html.*
 import java.io.File
-import java.nio.file.Paths
 import java.util.*
-import java.util.stream.Collectors
 
-/**
- * @author Alexander Weigl
- * @version 1 (11.09.17)
- */
-class ScriptDoc(
-    index: Index,
-) : DefaultPage(File("script.html"), "Reference for Proof Scripts", index) {
+class ScriptDocModule(val index: Index, val usageIndex: UsageIndex) {
+    val commands = ServiceLoader.load(ProofScriptCommand::class.java).toList()
+
+    fun page(target: File) = ScriptDoc(target, index, commands)
+    fun addToIndex() {
+        commands.forEach {
+            index += it.indexSymbol()
+        }
+    }
+}
+
+private fun ProofScriptCommand.indexSymbol() =
+    Symbol.scriptCommand(this.name, this.category)
+
+class ScriptDoc(target: File, index: Index, val commands: List<ProofScriptCommand>) :
+    DefaultPage(target, "Reference for Proof Scripts", index) {
+
     override fun content(div: DIV) {
-        writePreamble(div)
-        writeCommand(div)
-        writeMacros(div)
-        writeTacletDocumentation(div)
+        div.writePreamble()
+        div.writeCommand()
+        div.writeMacros()
     }
 
-    private fun writePreamble(stream: DIV) {
-        stream.h1 { +"Reference for Proof Scripts" }
-        stream.p { +"*Generated on ${Date()}" }
+    private fun DIV.writePreamble() {
+        h1 { +"Reference for Proof Scripts" }
+        p { +"*Generated on ${Date()}" }
+
+        style {
+            +"""
+                .synopsis { background: lightgray; }
+                .doc { border-left: solid .5in orange; padding-left:1ex;}
+            """.trimIndent()
+        }
     }
 
     private val FORBBIDEN_COMMANDS = setOf("exit", "focus", "javascrpt", "leave", "let")
 
-    private val basedir = File("..")
-
-    private val dummyFile =
-        Paths.get(
-            ".",
-            "key.ui/examples/standard_key/prop_log/contraposition.key",
-        )
-
-    @get:Throws(ProblemLoaderException::class)
-    private val taclets: List<Taclet> by lazy {
-        println("Use dummy file: " + dummyFile.toAbsolutePath())
-        val env = KeYEnvironment.load(dummyFile)
-        val a = env.initConfig.taclets
-        a
-            .stream()
-            .sorted(Comparator.comparing { obj: Taclet -> obj.name() })
-            .collect(Collectors.toList())
-    }
-
-    private fun writeTacletDocumentation(stream: DIV) {
-        stream.section {
-            h2 { +"Taclets" }
-            div {
-                for (t in taclets) {
-                    div {
-                        +"[rule] "
-                        span { +t.displayName() }
-                        +" "
-                        t.assumesAndFindVariables.forEach {
-                            span { +"inst_$it" }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun writeMacros(stream: DIV) {
-        val macros =
-            ServiceLoader.load<ProofMacro?>(ProofMacro::class.java).filterNotNull().toMutableSet()
-        macros.sortedWith(Comparator.comparing { obj: ProofMacro -> obj.scriptCommandName })
-        stream.section {
+    private fun DIV.writeMacros() {
+        val macros = ServiceLoader.load(ProofMacro::class.java)
+            .filterNotNull()
+            .filter { it.scriptCommandName != null }
+            .toMutableSet()
+            .sortedBy { it.scriptCommandName }
+        section {
             h2 { +"Macros" }
             for (t in macros) {
                 div {
-                    span("name macro") { +t.scriptCommandName }
+                    h3("name macro") { +t.scriptCommandName }
                     p {
                         +"Original name ${t.name} in ${t.category}"
                     }
-                    p {
-                        +t.description
-                    }
+                    div("doc") {unsafe {  +t.description } }
                 }
             }
         }
     }
 
-    private fun P.helpForCommand(c: ProofScriptCommand) {
+    private fun SECTION.helpForCommand(c: ProofScriptCommand) {
         h3 { +c.name }
         div {
-            +"> Synopsis: "
-            span {
-                +c.name
-                for (a in c.arguments) {
-                    +" "
-                    if (a.isFlag) {
-                        +"[${a.name}]"
-                    } else {
-                        val arg =
-                            if (a.name.startsWith("#")) {
-                                // positional argument
-                                "<${a.type.simpleName.uppercase(Locale.getDefault())}>"
-                            } else {
-                                "${a.name}=<${a.type.simpleName.uppercase(Locale.getDefault())}>"
-                            }
-                        if (!a.isRequired) {
-                            +"[$arg]"
+            div("synopsis") {
+                code {
+                    +c.name
+                    for (a in c.arguments) {
+                        +" "
+                        if (a.isFlag) {
+                            +"[${a.name}]"
                         } else {
-                            +arg
+                            val arg =
+                                if (a.name.startsWith("#")) {
+                                    "<${a.type.simpleName.uppercase(Locale.getDefault())}>"
+                                } else {
+                                    "${a.name}=<${a.type.simpleName.uppercase(Locale.getDefault())}>"
+                                }
+                            if (!a.isRequired) {
+                                +"[$arg]"
+                            } else {
+                                +arg
+                            }
                         }
                     }
                 }
             }
-        }
-        p { +c.documentation }
-        p {
-            h4 { +"Arguments:" }
-            ul {
-                for (a in c.arguments) {
-                    li {
-                        +"${a.name} : ${a.type.simpleName.uppercase()}"
+            div {
+                details {
+                    summary { +"Documentation" }
+                    div("doc") {
+                        markdown(c.documentation)
+                    }
+                }
+            }
 
-                        if (a.isRequired) {
-                            +" ("
-                            b { +"required" }
-                            +")"
+            p {
+                h4 { +"Arguments:" }
+                ul {
+                    for (a in c.arguments) {
+                        li {
+                            div {
+                                code { +"${a.name} : ${a.type.simpleName.uppercase()}" }
+
+                                if (a.isRequired) {
+                                    +" ("
+                                    b { +"required" }
+                                    +")"
+                                }
+                            }
+                            div { +(a.documentation ?: " not available") }
+
                         }
-                        +(a.documentation ?: " not available")
                     }
                 }
             }
         }
     }
 
-    private fun writeCommand(stream: DIV) {
-        val commands = ServiceLoader.load(ProofScriptCommand::class.java).toMutableList()
+    private fun DIV.writeCommand() {
         commands.sortedWith(Comparator.comparing { it.name })
-        stream.div {
+        div {
             h2 { +"Commands" }
             for (t in commands) {
                 if (t.name !in FORBBIDEN_COMMANDS) {
-                    p { this.helpForCommand(t) }
+                    section { this.helpForCommand(t) }
                 }
             }
         }
