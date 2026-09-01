@@ -4,7 +4,7 @@ plugins {
     `java-library`
     application
     id("com.gradleup.shadow") version "9.6.1"
-    id("com.github.ben-manes.versions") version "0.56.0"
+    id("com.github.ben-manes.versions") version "0.61.0"
 }
 
 version = "1.0"
@@ -29,7 +29,7 @@ dependencies {
     implementation("org.key-project:key.core.wd:$keyVersion")
     implementation("org.key-project:key.core.infflow:${keyVersion}")
 
-    implementation("io.github.wadoon:kotlin-prettyprinting:1.0")
+    implementation("io.github.wadoon:kotlin-prettyprinting:1.1.0")
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -38,7 +38,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.18")
 
     //val testImplementation by configurations
-    testImplementation(platform("org.junit:junit-bom:6.1.2"))
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
