@@ -1,10 +1,10 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.4.10"
+    id("org.jetbrains.kotlin.jvm") version "2.4.20"
     id("org.jetbrains.dokka") version "2.2.0"
     `java-library`
     application
     id("com.gradleup.shadow") version "9.6.1"
-    id("com.github.ben-manes.versions") version "0.56.0"
+    id("com.github.ben-manes.versions") version "0.64.0"
 }
 
 version = "1.0"
@@ -29,23 +29,23 @@ dependencies {
     implementation("org.key-project:key.core.wd:$keyVersion")
     implementation("org.key-project:key.core.infflow:${keyVersion}")
 
-    implementation("io.github.wadoon:kotlin-prettyprinting:1.0")
+    implementation("io.github.wadoon:kotlin-prettyprinting:1.1.0")
 
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("com.github.ajalt.clikt:clikt:5.1.0")
     implementation("org.jetbrains:annotations:26.1.0")
-    implementation("org.slf4j:slf4j-api:2.0.18")
+    implementation("org.slf4j:slf4j-api:2.0.20")
 
     //val testImplementation by configurations
-    testImplementation(platform("org.junit:junit-bom:6.1.2"))
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("com.google.truth:truth:1.4.5")
-    testImplementation("org.slf4j:slf4j-simple:2.0.18")
+    testImplementation("org.slf4j:slf4j-simple:2.0.20")
 
     implementation("org.jetbrains.kotlinx:kotlinx-html-jvm:0.12.0")
     implementation("com.atlassian.commonmark:commonmark:0.17.0")
