@@ -4,7 +4,7 @@ plugins {
     `java-library`
     application
     id("com.gradleup.shadow") version "9.6.1"
-    id("com.github.ben-manes.versions") version "0.66.0"
+    id("io.github.ben-manes.versions") version "0.66.0"
 }
 
 version = "1.0"
