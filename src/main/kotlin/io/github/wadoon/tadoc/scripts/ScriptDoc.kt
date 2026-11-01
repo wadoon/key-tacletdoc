@@ -29,10 +29,14 @@ import kotlinx.html.*
 import java.io.File
 import java.util.*
 
-class ScriptDocModule(val index: Index, val usageIndex: UsageIndex) {
+class ScriptDocModule(
+    val index: Index,
+    val usageIndex: UsageIndex,
+) {
     val commands = ServiceLoader.load(ProofScriptCommand::class.java).toList()
 
     fun page(target: File) = ScriptDoc(target, index, commands)
+
     fun addToIndex() {
         commands.forEach {
             index += it.indexSymbol()
@@ -40,12 +44,13 @@ class ScriptDocModule(val index: Index, val usageIndex: UsageIndex) {
     }
 }
 
-private fun ProofScriptCommand.indexSymbol() =
-    Symbol.scriptCommand(this.name, this.category)
+private fun ProofScriptCommand.indexSymbol() = Symbol.scriptCommand(this.name, this.category)
 
-class ScriptDoc(target: File, index: Index, val commands: List<ProofScriptCommand>) :
-    DefaultPage(target, "Reference for Proof Scripts", index) {
-
+class ScriptDoc(
+    target: File,
+    index: Index,
+    val commands: List<ProofScriptCommand>,
+) : DefaultPage(target, "Reference for Proof Scripts", index) {
     override fun content(div: DIV) {
         div.writePreamble()
         div.writeCommand()
@@ -57,21 +62,26 @@ class ScriptDoc(target: File, index: Index, val commands: List<ProofScriptComman
         p { +"*Generated on ${Date()}" }
 
         style {
-            +"""
-                .synopsis { background: lightgray; }
-                .doc { border-left: solid .5in orange; padding-left:1ex;}
-            """.trimIndent()
+            unsafe {
+                +
+                    """
+                    .synopsis { background: lightgray; }
+                    .doc { border-left: solid .5in orange; padding-left:1ex;}
+                    """.trimIndent()
+            }
         }
     }
 
     private val FORBBIDEN_COMMANDS = setOf("exit", "focus", "javascrpt", "leave", "let")
 
     private fun DIV.writeMacros() {
-        val macros = ServiceLoader.load(ProofMacro::class.java)
-            .filterNotNull()
-            .filter { it.scriptCommandName != null }
-            .toMutableSet()
-            .sortedBy { it.scriptCommandName }
+        val macros =
+            ServiceLoader
+                .load(ProofMacro::class.java)
+                .filterNotNull()
+                .filter { it.scriptCommandName != null }
+                .toMutableSet()
+                .sortedBy { it.scriptCommandName }
         section {
             h2 { +"Macros" }
             for (t in macros) {
@@ -80,7 +90,7 @@ class ScriptDoc(target: File, index: Index, val commands: List<ProofScriptComman
                     p {
                         +"Original name ${t.name} in ${t.category}"
                     }
-                    div("doc") {unsafe {  +t.description } }
+                    div("doc") { unsafe { +t.description } }
                 }
             }
         }
@@ -135,8 +145,7 @@ class ScriptDoc(target: File, index: Index, val commands: List<ProofScriptComman
                                     +")"
                                 }
                             }
-                            div { +(a.documentation ?: " not available") }
-
+                            div { +(a.documentation.ifBlank { " not available" }) }
                         }
                     }
                 }
